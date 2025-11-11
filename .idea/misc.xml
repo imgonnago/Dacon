@@ -3,4 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Dacon" />
   </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Dacon" project-jdk-type="Python SDK" />
 </project>
