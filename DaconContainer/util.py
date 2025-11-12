@@ -7,7 +7,6 @@ def preprocessing(train):
     train = data_load()
     scaler = StandardScaler()
 
-def baseline():
-    submission = predict()
+def baseline(submission):
     submission.to_csv('C:/Users/zxfg0/Dacon/baseline/baseline_submit.csv', index=False)
 

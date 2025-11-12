@@ -15,24 +15,27 @@ def main():
     if answer == "y":
         EDA_run()
     elif answer == "n":
-        print("EDA를 건너뜀")
+        print("EDA를 건너뜀\n")
 
     print("탐색된 공행성쌍 수:", len(pairs))
+    print("-------pairs-------")
     print(pairs.head())
+    print("\n")
 
     build_training_data(pivot_df, pairs)
-    print("train_x,y split complete")
-    hard_voting_model = fit(model())
-    print("voting model fit complete")
+    print("=======train_x,y split complete=======\n")
+    hard_voting_model = model()
+    fit(hard_voting_model)
+    print("=======voting model fit complete=======\n")
     submission = predict(pivot_df, pairs, hard_voting_model)
-    print("predict complete")
+    print("=======predict complete=======\n")
     submission.head()
 
-    baseline()
+    baseline(submission)
     print("baseline_submission 생성완료 (Dacon/baseline)")
 
 
 
 if __name__ == "__main__":
-    print("main 시작")
+    print("=======main 시작=======🤞\n")
     main()

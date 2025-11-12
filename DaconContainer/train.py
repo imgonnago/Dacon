@@ -23,8 +23,9 @@ def fit(hard_voting_model):
     train_X = df_train_model[feature_cols].values
     train_y = df_train_model["target"].values
 
-    hard_voting_model = hard_voting_model.fit(train_X, train_y)
+    hard_voting_model.fit(train_X, train_y)
 
+    return hard_voting_model
 
 
 def predict(pivot, pairs, reg):
