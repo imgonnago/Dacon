@@ -1,40 +1,41 @@
 from cProfile import label
 from itertools import groupby
-from data import data
 import pandas as pd
 import matplotlib
-from pandas import pivot
-from xgboost import train
+from  data import data_load, data_preparing
+
 
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.lines import lineStyles
 
-print("데이터 로드 성공")
-print("-------EDA-------")
-print(data.monthly.head())
-print("-------INFO-------")
-print(data.monthly.info())
-print("-------DESCRIBE-------")
-print(data.monthly.describe())
+train = data_load()
+monthly_data, pivot_df = data_preparing(train)
 
-#년월에 따른 value값
-fig, axes = plt.subplots(nrows=1, ncols=2)
-axes[0].set_title("value data")
-axes[0].scatter(data.monthly["ym"], data.monthly["value"], c='red', label = 'value')
-axes[0].set_xlabel('yyyy-mm')
-axes[0].set_ylabel('value')
-axes[0].legend()
+def EDA_run():
+    print("데이터 로드 성공")
+    print("-------EDA-------")
+    print(monthly_data.head())
+    print("-------INFO-------")
+    print(monthly_data.info())
+    print("-------DESCRIBE-------")
+    print(monthly_data.describe())
 
-#value값의 이상치 확인
-axes[1].set_title("value data")
-axes[1].boxplot(data.monthly["value"], label = 'value')
-axes[1].set_ylabel('value')
-axes[1].legend()
-plt.tight_layout()
+    # 년월에 따른 value값
+    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+    axes[0].set_title("value ")
+    axes[0].scatter(monthly_data["ym"], monthly_data["value"], c='red', label='value')
+    axes[0].set_xlabel('yyyy-mm')
+    axes[0].set_ylabel('value')
+    axes[0].legend()
 
-print(train.info())
-print(train.head())
+    # value값의 이상치 확인
+    axes[1].set_title("value ")
+    axes[1].boxplot(monthly_data["value"], label='value')
+    axes[1].set_ylabel('value')
+    axes[1].legend()
+    plt.tight_layout()
+    plt.show()
 
 #value값에는 이상치가 있는것이 확실함. 하지만 없앨수는 없기때문에 정규화를 진행해야함. log1p 적용 후 standardscaler 적용해서 값을 낮추고 표준정규분포를 만들기
