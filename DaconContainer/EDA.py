@@ -5,7 +5,7 @@ import matplotlib
 from  data import data_load, data_preparing
 
 
-matplotlib.use('Qt5Agg')
+#matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.lines import lineStyles
@@ -15,6 +15,13 @@ monthly_data, pivot_df = data_preparing(train)
 
 def EDA_run():
     print("데이터 로드 성공")
+    print("-------TRAIN-------")
+    print(train.head())
+    print("-------INFO-------")
+    print(train.info())
+    print("-------DESCRIBE-------")
+    print(train.describe())
+    print("-------MONTHLY-------")
     print("-------EDA-------")
     print(monthly_data.head())
     print("-------INFO-------")

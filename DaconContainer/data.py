@@ -5,7 +5,6 @@ from tqdm import tqdm
 def data_load():
     url = "https://raw.githubusercontent.com/imgonnago/Dacon/refs/heads/main/ACD2-Week12-1/dataset/train.csv"
     train = pd.read_csv(url)
-    print("월별 총 무역량 매트릭스 생성")
     train.head()
     return train
 
