@@ -14,7 +14,14 @@ def data_preparing(train):
         .groupby(["item_id", "year", "month"], as_index=False)["value"]
         .sum()
     )
-    monthly_data = monthly
+    monthly_val = monthly
+
+    monthly_weight = (
+        train
+            .groupby(["item_id", "year", "month"], as_index=False)["weight"]
+            .sum()
+    )
+    monthly_weight = monthly_weight
 
     # year, month를 하나의 키(ym)로 묶기
     monthly["ym"] = pd.to_datetime(
@@ -26,7 +33,7 @@ def data_preparing(train):
         .pivot(index="item_id", columns="ym", values="value")
         .fillna(0.0)
     )
-    return monthly_data, pivot_df
+    return monthly_val,monthly_weight, pivot_df
 
 def safe_corr(x, y):
     if np.std(x) == 0 or np.std(y) == 0:
