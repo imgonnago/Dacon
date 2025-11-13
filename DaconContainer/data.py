@@ -43,7 +43,7 @@ def safe_corr(x, y):
     return float(np.corrcoef(x, y)[0, 1])
 
 
-def find_comovement_pairs(pivot_df_value, max_lag=6, min_nonzero=12, corr_threshold=0.4):
+def find_comovement_pairs(pivot_df_value, max_lag=12, min_nonzero=12, corr_threshold=0.4):
     items = pivot_df_value.index.to_list()
     months = pivot_df_value.columns.to_list()
     n_months = len(months)

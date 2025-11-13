@@ -2,15 +2,15 @@
 from data import data_load, data_preparing, find_comovement_pairs, build_training_data
 from EDA import EDA_run
 from model import model
-from train import predict, create_train, fit
+from train import predict, fit
 from util import baseline
 
 
 def main():
     train = data_load()
     print("=====data preparing=====")
-    monthly,pivot_df = data_preparing(train)
-    pairs = find_comovement_pairs(pivot_df)
+    monthly,pivot_df_value, pivot_df_weight = data_preparing(train)
+    pairs = find_comovement_pairs(pivot_df_value)
 
     answer = input("EDA를 진행할까요? (y/n) >>")
     if answer == "y":
@@ -23,12 +23,12 @@ def main():
     print(pairs.head())
     print("\n")
 
-    build_training_data(pivot_df, pairs)
+    build_training_data(pivot_df_value, pivot_df_weight, pairs)
     print("=======train_x,y split complete=======\n")
     hard_voting_model = model()
     fit(hard_voting_model)
     print("=======voting model fit complete=======\n")
-    submission = predict(pivot_df, pairs, hard_voting_model)
+    submission = predict(pivot_df_value,pivot_df_weight, pairs, hard_voting_model)
     print("=======predict complete=======\n")
     submission.head()
 
