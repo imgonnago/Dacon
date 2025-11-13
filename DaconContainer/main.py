@@ -26,7 +26,7 @@ def main():
     print("=======train_x,y split complete=======\n")
     hard_voting_model = model()
     fit(hard_voting_model)
-    print("=======voting model fit complete=======\n")
+    print("=======voting model fit complete=======")
     submission = predict(pivot_df, pairs, hard_voting_model)
     print("=======predict complete=======\n")
     submission.head()
@@ -37,5 +37,5 @@ def main():
 
 
 if __name__ == "__main__":
-    print("=======main 시작=======🤞\n")
+    print("=======main 시작=======\n")
     main()
