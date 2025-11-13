@@ -1,3 +1,4 @@
+#EDA.py
 from  data import data_load, data_preparing
 #matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt

@@ -1,3 +1,4 @@
+#main.py
 from data import data_load, data_preparing, find_comovement_pairs, build_training_data
 from EDA import EDA_run
 from model import model
