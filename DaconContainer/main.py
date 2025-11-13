@@ -27,16 +27,20 @@ def main():
     print("=======train_x,y split complete=======\n")
     hard_voting_model = model()
     fit(hard_voting_model)
-    print("=======voting model fit complete=======")
+    print("=======voting model fit complete=======\n")
     submission = predict(pivot_df, pairs, hard_voting_model)
     print("=======predict complete=======\n")
     submission.head()
 
     baseline(submission)
-    print("baseline_submission 생성완료 (Dacon/baseline)")
-
+    if answer == "m":
+        print("baseline_submission 생성완료 (Dacon/baseline)")
+    elif answer == "w":
+        print("baseline_submission 생성완료 (Dacon/baseline)")
+    elif answer == 1:
+        print("baseline_submission 생성실패")
 
 
 if __name__ == "__main__":
-    print("=======main 시작=======\n")
+    print("=======main 시작=======🤞\n")
     main()
