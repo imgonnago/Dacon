@@ -7,7 +7,8 @@ train = data_load()
 monthly, pivot_df = data_preparing(train)
 
 def EDA_run():
-    print("=======EDA=======\n")
+    monthly["value"]
+    """" print("=======EDA=======\n")
     print("-------TRAIN-------")
     print(train.head())
     print("-------INFO-------")
@@ -39,6 +40,6 @@ def EDA_run():
     axes[1].set_ylabel('value')
     axes[1].legend()
     plt.tight_layout()
-    plt.show()
+    plt.show()"""
 
 #value값에는 이상치가 있는것이 확실함. 하지만 없앨수는 없기때문에 정규화를 진행해야함. log1p 적용 후 standardscaler 적용해서 값을 낮추고 표준정규분포를 만들기

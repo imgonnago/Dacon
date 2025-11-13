@@ -13,7 +13,7 @@ def data_load():
 def data_preparing(train):
     monthly = (
         train
-        .groupby(["item_id", "year", "month"], as_index=False)["value"]
+        .groupby(["item_id", "year", "month"], as_index=False)[["value","weight"]]
         .sum()
     )
     # year, month를 하나의 키(ym)로 묶기
@@ -21,12 +21,19 @@ def data_preparing(train):
         monthly["year"].astype(str) + "-" + monthly["month"].astype(str).str.zfill(2)
     )
     # item_id × ym 피벗 (월별 총 무역량 매트릭스 생성)
-    pivot_df = (
+    pivot_df_value = (
         monthly
         .pivot(index="item_id", columns="ym", values="value")
         .fillna(0.0)
     )
-    return monthly, pivot_df
+
+    pivot_df_weight = (
+        monthly
+        .pivot(index="item_id", columns="ym", values="weight")
+        .fillna(0.0)
+    )
+
+    return monthly, pivot_df_value, pivot_df_weight
 
 
 def safe_corr(x, y):
@@ -35,15 +42,15 @@ def safe_corr(x, y):
     return float(np.corrcoef(x, y)[0, 1])
 
 
-def find_comovement_pairs(pivot_df, max_lag=6, min_nonzero=12, corr_threshold=0.4):
-    items = pivot_df.index.to_list()
-    months = pivot_df.columns.to_list()
+def find_comovement_pairs(pivot_df_value, max_lag=6, min_nonzero=12, corr_threshold=0.4):
+    items = pivot_df_value.index.to_list()
+    months = pivot_df_value.columns.to_list()
     n_months = len(months)
 
     results = []
 
     for i, leader in tqdm(enumerate(items)):
-        x = pivot_df.loc[leader].values.astype(float)
+        x = pivot_df_value.loc[leader].values.astype(float)
         if np.count_nonzero(x) < min_nonzero:
             continue
 
@@ -51,7 +58,7 @@ def find_comovement_pairs(pivot_df, max_lag=6, min_nonzero=12, corr_threshold=0.
             if follower == leader:
                 continue
 
-            y = pivot_df.loc[follower].values.astype(float)
+            y = pivot_df_value.loc[follower].values.astype(float)
             if np.count_nonzero(y) < min_nonzero:
                 continue
 
@@ -80,7 +87,7 @@ def find_comovement_pairs(pivot_df, max_lag=6, min_nonzero=12, corr_threshold=0.
     return pairs
 
 
-def build_training_data(pivot_df, pairs):
+def build_training_data(pivot_df_value,pivot_df_weight, pairs):
     """
     공행성쌍 + 시계열을 이용해 (X, y) 학습 데이터를 만드는 함수
     input X:
@@ -88,7 +95,7 @@ def build_training_data(pivot_df, pairs):
     target y:
       - b_t_plus_1
     """
-    months = pivot_df.columns.to_list()
+    months = pivot_df_value.columns.to_list()
     n_months = len(months)
 
     rows = []
@@ -99,23 +106,26 @@ def build_training_data(pivot_df, pairs):
         lag = int(row.best_lag)
         corr = float(row.max_corr)
 
-        if leader not in pivot_df.index or follower not in pivot_df.index:
+        if leader not in pivot_df_value.index or follower not in pivot_df_value.index:
             continue
 
-        a_series = pivot_df.loc[leader].values.astype(float)
-        b_series = pivot_df.loc[follower].values.astype(float)
+        a_series = pivot_df_value.loc[leader].values.astype(float)
+        a_weight_series = pivot_df_weight.loc[leader].values.astype(float)
+        b_series = pivot_df_value.loc[follower].values.astype(float)
 
         # t+1이 존재하고, t-lag >= 0인 구간만 학습에 사용
         for t in range(max(lag, 1), n_months - 1):
             b_t = b_series[t]
             b_t_1 = b_series[t - 1]
             a_t_lag = a_series[t - lag]
+            a_t_lag_weight = a_weight_series[t - lag]
             b_t_plus_1 = b_series[t + 1]
 
             rows.append({
                 "b_t": b_t,
                 "b_t_1": b_t_1,
                 "a_t_lag": a_t_lag,
+                "a_t_lag_weight": a_t_lag_weight,
                 "max_corr": corr,
                 "best_lag": float(lag),
                 "target": b_t_plus_1,

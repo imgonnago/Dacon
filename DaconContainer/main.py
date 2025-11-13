@@ -32,8 +32,12 @@ def main():
     submission.head()
 
     baseline(submission)
-    print("baseline_submission 생성완료 (Dacon/baseline)")
-
+    if answer == "m":
+        print("baseline_submission 생성완료 (Dacon/baseline)")
+    elif answer == "w":
+        print("baseline_submission 생성완료 (Dacon/baseline)")
+    elif answer == 1:
+        print("baseline_submission 생성실패")
 
 
 if __name__ == "__main__":
