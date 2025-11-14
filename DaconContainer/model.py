@@ -11,11 +11,11 @@ def model():
     )"""
     xgb_model = xgb.XGBRegressor(
         objective='reg:absoluteerror',
-        n_estimators=300,
+        n_estimators=400,
         learning_rate=0.999,
         gamma=0.2,
-        max_depth=8,
-        min_child_weight=12,
+        max_depth=7,
+        min_child_weight=10,
         random_state=42,
         n_jobs=-1,
         eval_metric='mae'

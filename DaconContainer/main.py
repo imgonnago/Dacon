@@ -9,7 +9,6 @@ from util import baseline
 
 def main():
     train = data_load()
-    print("전처리 확인")
     print(train.head())
     print("=====data preparing=====")
     monthly,pivot_df_value, pivot_df_weight = data_preparing(train)
@@ -26,11 +25,12 @@ def main():
     print(pairs.head())
     print("\n")
 
-    build_training_data(pivot_df_value, pivot_df_weight, pairs)
+    df_train = build_training_data(pivot_df_value, pivot_df_weight, pairs)
+    print(df_train)
     print("=======train_x,y split complete=======\n")
-    #hard_voting_model = automl()
-    hard_voting_model = model()
-    fit(hard_voting_model)
+    hard_voting_model = automl(df_train)
+    #hard_voting_model = model()
+    #fit(hard_voting_model)
     print("=======voting model fit complete=======\n")
     submission = predict(pivot_df_value,pivot_df_weight, pairs, hard_voting_model)
     print("=======predict complete=======\n")
