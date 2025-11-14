@@ -4,6 +4,11 @@ from sklearn.ensemble import RandomForestRegressor, VotingRegressor
 
 # 회귀모델 학습
 def model():
+    """rf_model = RandomForestRegressor(
+        n_estimators=62,
+        max_features=1.0,
+
+    )"""
     xgb_model = xgb.XGBRegressor(
         objective='reg:absoluteerror',
         n_estimators=300,

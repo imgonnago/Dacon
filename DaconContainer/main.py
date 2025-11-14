@@ -1,6 +1,7 @@
 #main.py
-from data import data_load, data_preparing, find_comovement_pairs, build_training_data
+from data import data_load, data_preparing, find_comovement_pairs, build_training_data,transform_log_stand
 from EDA import EDA_run
+from automl import automl
 from model import model
 from train import predict, fit
 from util import baseline
@@ -8,13 +9,16 @@ from util import baseline
 
 def main():
     train = data_load()
+    #train_pre = transform_log_stand(train)
+    #print("전처리 확인")
+    print(train.head())
     print("=====data preparing=====")
     monthly,pivot_df_value, pivot_df_weight = data_preparing(train)
     pairs = find_comovement_pairs(pivot_df_value)
 
     answer = input("EDA를 진행할까요? (y/n) >>")
     if answer == "y":
-        EDA_run()
+        EDA_run(train)
     elif answer == "n":
         print("EDA를 건너뜀\n")
 
@@ -25,6 +29,7 @@ def main():
 
     build_training_data(pivot_df_value, pivot_df_weight, pairs)
     print("=======train_x,y split complete=======\n")
+    #hard_voting_model = automl()
     hard_voting_model = model()
     fit(hard_voting_model)
     print("=======voting model fit complete=======\n")
@@ -34,9 +39,9 @@ def main():
 
     baseline(submission)
     if answer == "m":
-        print("baseline_submission 생성완료 (Dacon/baseline/baseline_submission.csv)")
+        print("baseline_submission 생성완료 (Dacon/baselinez)")
     elif answer == "w":
-        print("baseline_submission 생성완료 (Dacon/baseline/baseline_submission.csv)")
+        print("baseline_submission 생성완료 (Dacon/baseline)")
     elif answer == 1:
         print("baseline_submission 생성실패")
 
