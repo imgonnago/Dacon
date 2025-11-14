@@ -4,13 +4,13 @@ def automl(df_train_model):
     feature_cols = ['b_t', 'b_t_1', 'a_t_lag','a_t_lag_weight', 'max_corr', 'best_lag']
     train_X = df_train_model[feature_cols].values
     train_y = df_train_model["target"].values
-    automl = AutoML(n_jobs=-1)
+    automl = AutoML(n_jobs=-1, gpu_per_trial=-1)
 
     settings = {
         "time_budget": 1800,
         "task": "regression",
         "metric": "mse",
-        "estimator_list": [""],
+        "estimator_list": ["lgbm","catboost","xgboost","extra_tree"],
         "log_file_name": "automl_multi.log",
 
     }
