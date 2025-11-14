@@ -1,5 +1,5 @@
 #main.py
-from data import data_load, data_preparing, find_comovement_pairs, build_training_data,transform_log_stand, tranfrom_log_minmax
+from data import data_load, data_preparing, find_comovement_pairs, build_training_data, tranfrom_log_minmax
 from EDA import EDA_run
 from automl import automl
 from model import model
@@ -9,16 +9,15 @@ from util import baseline
 
 def main():
     train = data_load()
-    train_pre = tranfrom_log_minmax(train)
     print("전처리 확인")
     print(train.head())
     print("=====data preparing=====")
-    monthly,pivot_df_value, pivot_df_weight = data_preparing(train_pre)
+    monthly,pivot_df_value, pivot_df_weight = data_preparing(train)
     pairs = find_comovement_pairs(pivot_df_value)
 
     answer = input("EDA를 진행할까요? (y/n) >>")
     if answer == "y":
-        EDA_run(train_pre)
+        EDA_run(train)
     elif answer == "n":
         print("EDA를 건너뜀\n")
 

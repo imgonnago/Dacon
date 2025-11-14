@@ -1,7 +1,6 @@
 from flaml import AutoML
-from train import create_train
-def automl():
-    df_train_model = create_train()
+
+def automl(df_train_model):
     feature_cols = ['b_t', 'b_t_1', 'a_t_lag','a_t_lag_weight', 'max_corr', 'best_lag']
     train_X = df_train_model[feature_cols].values
     train_y = df_train_model["target"].values

@@ -10,33 +10,21 @@ def data_load():
     train.head()
     return train
 
-def transform_log_stand(train):
-    scaler = StandardScaler()
-    train_log = train[["weight","value"]]
-    train_origin = train.drop(["weight","value"], axis= 1)
-    #log1p + standardscaler
-    train_log = np.log1p(train_log)
-    train_log_stand = scaler.fit_transform(train_log)
-    train_log_stand_done = pd.DataFrame(train_log_stand, columns=["weight","value"])
-
-    train = pd.concat([train_origin,train_log_stand_done], axis=1)
-
-    return train
-
+#로그변환 정규화 진행 ->  build_training_data 리턴값 사용
 def tranfrom_log_minmax(train):
     scaler = MinMaxScaler()
-    train_minmax = train[["weight", "value"]]
-    train_origin = train.drop(["weight", "value"], axis=1)
-    #log1p + MinMaxScaler
+    train_minmax = train["a_t_lag_weight"]
+    train_origin = train.drop(["a_t_lag_weight"], axis=1)
+
+    # log1p + MinMaxScaler
     train_log = np.log1p(train_minmax)
     train_log_minmax = scaler.fit_transform(train_log)
-    train_log_minmax_done = pd.DataFrame(train_log_minmax, columns=["weight", "value"])
-
+    train_log_minmax_done = pd.DataFrame(train_log_minmax, columns=["a_t_lag_weight"])
     train = pd.concat([train_origin, train_log_minmax_done], axis=1)
-
     return train
 
 
+#pivot weight, value, monthly 생성
 def data_preparing(train):
     monthly = (
          train
@@ -62,14 +50,14 @@ def data_preparing(train):
 
     return monthly, pivot_df_value, pivot_df_weight
 
-
+#공행성쌍 찾을때 사용
 def safe_corr(x, y):
     if np.std(x) == 0 or np.std(y) == 0:
         return 0.0
     return float(np.corrcoef(x, y)[0, 1])
 
-
-def find_comovement_pairs(pivot_df_value, max_lag=12, min_nonzero=12, corr_threshold=0.4):
+#공생성쌍 탐색 -> pairs리턴
+def find_comovement_pairs(pivot_df_value, max_lag=12, min_nonzero=12, corr_threshold=0.5):
     items = pivot_df_value.index.to_list()
     months = pivot_df_value.columns.to_list()
     n_months = len(months)
@@ -113,7 +101,7 @@ def find_comovement_pairs(pivot_df_value, max_lag=12, min_nonzero=12, corr_thres
     pairs = pd.DataFrame(results)
     return pairs
 
-
+#학습데이터를 생성 -> 학습데이터에 weight, value를 로그, 정규화 해아햠
 def build_training_data(pivot_df_value,pivot_df_weight, pairs):
     """
     공행성쌍 + 시계열을 이용해 (X, y) 학습 데이터를 만드는 함수
@@ -164,4 +152,3 @@ def build_training_data(pivot_df_value,pivot_df_weight, pairs):
 
 #train[(train["item_id"]=="DBWLZWNK") & (train["year"] == 2023) & (train["month"] == 1)].value_counts()
 #monthly[(monthly["item_id"]=="DBWLZWNK") & (monthly["year"] == 2023) & (monthly["month"] == 1)].value_counts()
-
