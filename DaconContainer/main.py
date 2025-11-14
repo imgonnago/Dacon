@@ -34,9 +34,9 @@ def main():
 
     baseline(submission)
     if answer == "m":
-        print("baseline_submission 생성완료 (Dacon/baseline)")
+        print("baseline_submission 생성완료 (Dacon/baseline/baseline_submission.csv)")
     elif answer == "w":
-        print("baseline_submission 생성완료 (Dacon/baseline)")
+        print("baseline_submission 생성완료 (Dacon/baseline/baseline_submission.csv)")
     elif answer == 1:
         print("baseline_submission 생성실패")
 

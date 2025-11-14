@@ -1,8 +1,8 @@
 #data.py
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tqdm import tqdm
-
 
 def data_load():
     url = "https://raw.githubusercontent.com/imgonnago/Dacon/refs/heads/main/ACD2-Week12-1/dataset/train.csv"
@@ -10,10 +10,36 @@ def data_load():
     train.head()
     return train
 
+def transform_log_stand(train):
+    scaler = StandardScaler()
+    train_log = train[["weight","value"]]
+    train_origin = train.drop(["weight","value"], axis= 1)
+    #log1p + standardscaler
+    train_log = np.log1p(train_log)
+    train_log_stand = scaler.fit_transform(train_log)
+    train_log_stand_done = pd.DataFrame(train_log_stand, columns=["weight","value"])
+
+    train = pd.concat([train_origin,train_log_stand_done], axis=1)
+
+    return train
+
+def tranfrom_log_minmax(train):
+    scaler = MinMaxScaler()
+    train_minmax = train[["weight", "value"]]
+    train_origin = train.drop(["weight", "value"], axis=1)
+    #log1p + MinMaxScaler
+    train_log = np.log1p(train_minmax)
+    train_log_minmax = scaler.fit_transform(train_log)
+    train_log_minmax_done = pd.DataFrame(train_log_minmax, columns=["weight", "value"])
+
+    train = pd.concat([train_origin, train_log_minmax_done], axis=1)
+
+    return train
+
 
 def data_preparing(train):
     monthly = (
-        train
+         train
         .groupby(["item_id", "year", "month"], as_index=False)[["value","weight"]]
         .sum()
     )
@@ -136,5 +162,6 @@ def build_training_data(pivot_df_value,pivot_df_weight, pairs):
     return df_train
 
 
-
+#train[(train["item_id"]=="DBWLZWNK") & (train["year"] == 2023) & (train["month"] == 1)].value_counts()
+#monthly[(monthly["item_id"]=="DBWLZWNK") & (monthly["year"] == 2023) & (monthly["month"] == 1)].value_counts()
 

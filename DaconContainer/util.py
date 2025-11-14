@@ -3,11 +3,6 @@ from data import data_load
 from sklearn.preprocessing import StandardScaler
 from train import predict
 
-
-def preprocessing(train):
-    train = data_load()
-    scaler = StandardScaler()
-
 def baseline(submission):
     answer = input("mac/window(m/w)")
     if answer == "m":
