@@ -1,15 +1,20 @@
 #model.py
 import xgboost as xgb
-from sklearn.ensemble import RandomForestRegressor, VotingRegressor
+from sklearn.ensemble import RandomForestRegressor, VotingRegressor, ExtraTreesRegressor
+
+
 
 # 회귀모델 학습
 def model():
-    """rf_model = RandomForestRegressor(
-        n_estimators=62,
+    model = ExtraTreesRegressor(
+        n_estimators=47,
         max_features=1.0,
+        max_leaf_nodes = 26582
 
-    )"""
-    xgb_model = xgb.XGBRegressor(
+    )
+    return model
+
+    """xgb_model = xgb.XGBRegressor(
         objective='reg:absoluteerror',
         n_estimators=400,
         learning_rate=0.999,
@@ -20,7 +25,7 @@ def model():
         n_jobs=-1,
         eval_metric='mae'
     )
-    return xgb_model
+    return xgb_model"""
 
 
 

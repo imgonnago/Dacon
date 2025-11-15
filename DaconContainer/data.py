@@ -57,23 +57,23 @@ def safe_corr(x, y):
     return float(np.corrcoef(x, y)[0, 1])
 
 #공생성쌍 탐색 -> pairs리턴
-def find_comovement_pairs(pivot_df_value, max_lag=12, min_nonzero=12, corr_threshold=0.4):
-    items = pivot_df_value.index.to_list()
-    months = pivot_df_value.columns.to_list()
-    n_months = len(months)
+def find_comovement_pairs(df_lead, df_follow, max_lag=12, min_nonzero=12, corr_threshold=0.4):
+    lead = df_lead.index.to_list()
+    follow = df_follow.index.to_list()
+    n_months = len(df_lead.columns)
 
     results = []
 
-    for i, leader in tqdm(enumerate(items)):
-        x = pivot_df_value.loc[leader].values.astype(float)
+    for i, leader in tqdm(enumerate(lead)):
+        x = df_lead.loc[leader].values.astype(float)
         if np.count_nonzero(x) < min_nonzero:
             continue
 
-        for follower in items:
+        for follower in follow:
             if follower == leader:
                 continue
 
-            y = pivot_df_value.loc[follower].values.astype(float)
+            y = df_follow.loc[follower].values.astype(float)
             if np.count_nonzero(y) < min_nonzero:
                 continue
 

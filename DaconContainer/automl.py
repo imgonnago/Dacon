@@ -10,7 +10,7 @@ def automl(df_train_model):
         "time_budget": 1800,
         "task": "regression",
         "metric": "mse",
-        "estimator_list": ["enet","lassolars","sgd"],
+        "estimator_list": "auto",
         "log_file_name": "automl_multi.log",
 
     }

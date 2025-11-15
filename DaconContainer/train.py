@@ -16,17 +16,15 @@ def create_train():
     return df_train_model
 
 
-def fit(hard_voting_model):
-    df_train_model = create_train()
-
+def fit(model,df_train):
     feature_cols = ['b_t', 'b_t_1', 'a_t_lag','a_t_lag_weight', 'max_corr', 'best_lag']
 
-    train_X = df_train_model[feature_cols].values
-    train_y = df_train_model["target"].values
+    train_X = df_train[feature_cols].values
+    train_y = df_train["target"].values
 
-    hard_voting_model.fit(train_X, train_y)
+    model.fit(train_X, train_y)
 
-    return hard_voting_model
+    return model
 
 
 def predict(pivot_df_value,pivot_df_weight, pairs, reg):
@@ -73,6 +71,7 @@ def predict(pivot_df_value,pivot_df_weight, pairs, reg):
             "leading_item_id": leader,
             "following_item_id": follower,
             "value": y_pred,
+            "max_corr": corr,
         })
 
     df_pred = pd.DataFrame(preds)
