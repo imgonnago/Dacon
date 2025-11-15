@@ -1,0 +1,11 @@
+baseline_submit.csv
+==================================================
+                    AUTOML 요약
+==================================================
+Best estimator (모델타입): extra_tree
+Best loss(mse 기준): 89499530393.12587
+
+Best config(하이퍼파라미터)
+{'n_estimators': 47, 'max_features': 1.0, 'max_leaves': 26582} 
+
+dacon score = 0.3568748007
