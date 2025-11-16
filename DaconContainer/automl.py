@@ -1,3 +1,5 @@
+from cProfile import label
+
 from flaml import AutoML
 import time
 def automl(df_train_model):
@@ -16,8 +18,8 @@ def automl(df_train_model):
     }
 
     automl.fit(
-        X_train=train_X,
-        y_train=train_y,
+        dataframe=df_train_model,
+        label = 'target'
         **settings
     )
     print("\n" + "=" * 50)
