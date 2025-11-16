@@ -12,17 +12,22 @@ def data_load():
 
 #로그변환 정규화 진행 ->  build_training_data 리턴값 사용
 def tranfrom_log_minmax(train):
-    scaler = MinMaxScaler()
-    train_minmax = train["a_t_lag_weight"]
-    train_origin = train.drop(["a_t_lag_weight"], axis=1)
+    feature_cols = ['b_t', 'b_t_1', 'a_t_lag', 'a_t_lag_weight', 'max_corr', 'best_lag']
+    X_train_df = train[feature_cols].copy()
+    y_train_df = train[['target']].copy()
 
-    # log1p + MinMaxScaler
-    train_log = np.log1p(train_minmax)
-    train_log_minmax = scaler.fit_transform(train_log)
-    train_log_minmax_done = pd.DataFrame(train_log_minmax, columns=["a_t_lag_weight"])
-    train = pd.concat([train_origin, train_log_minmax_done], axis=1)
-    return train
+    cols_to_scale = ['b_t', 'b_t_1', 'a_t_lag', 'a_t_lag_weight']
 
+    X_train_df[cols_to_scale] = np.log1p(X_train_df[cols_to_scale])
+    x_scaler = MinMaxScaler()
+    X_train_df[cols_to_scale] = x_scaler.fit_transform(X_train_df[cols_to_scale])
+
+    y_train_df['target'] = np.log1p(y_train_df['target'])
+    y_scaler = MinMaxScaler()
+    y_train_df['target'] = y_scaler.fit_transform(y_train_df)
+
+    train = pd.concat([X_train_df, y_train_df], axis=1)
+    return  train, x_scaler, y_scaler
 
 #pivot weight, value, monthly 생성
 def data_preparing(train):

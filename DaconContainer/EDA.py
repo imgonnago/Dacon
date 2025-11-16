@@ -1,4 +1,8 @@
 #EDA.py
+from cProfile import label
+
+import numpy as np
+
 from  data import data_load, data_preparing
 #matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -26,20 +30,36 @@ def EDA_run(train):
     print(monthly.describe())
     print("\n")
 
+    pivot_df_w = np.array(pivot_df_weight)
     # 년월에 따른 value값
-    fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-    axes[0].set_title("value ")
-    axes[0].scatter(monthly["ym"], monthly["value"], c='red', label='value')
-    axes[0].set_xlabel('yyyy-mm')
-    axes[0].set_ylabel('value')
-    axes[0].legend()
+    plt.subplot(2,2,1)
+    plt.title("month-value")
+    plt.scatter(monthly['ym'],monthly['value'], color='red', label='value')
+    plt.xlabel('yyyy-mm')
+    plt.ylabel('value')
+    plt.legend()
+    plt.grid(True)
 
-    # value값의 이상치 확인
-    axes[1].set_title("value ")
-    axes[1].boxplot(monthly["value"], label='value')
-    axes[1].set_ylabel('value')
-    axes[1].legend()
-    plt.tight_layout()
-    plt.show()
+    plt.subplot(2,2,2)
+    plt.title('value-boxplot')
+    plt.boxplot(monthly['value'], label='value')
+    plt.ylabel('value')
+    plt.legend()
+    plt.grid(True)
+
+    """plt.subplot(2,2,3)
+    plt.title("ym-value-weight")
+    plt.scatter(pivot_df_weight.index['ym'], , color = 'pink' ,label= 'weight')
+    plt.scatter(pivot_df_value.index['ym'], pivot_df_value['value'], color = 'purple', label = 'value')
+    plt.ylabel('value-weight')
+    plt.xlabel('ym')
+    plt.legend()
+    plt.grid()
+    plt.tight_layout()"""
+
+
+
+
+    #fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 
 #value값에는 이상치가 있는것이 확실함. 하지만 없앨수는 없기때문에 정규화를 진행해야함. log1p 적용 후 standardscaler 적용해서 값을 낮추고 표준정규분포를 만들기

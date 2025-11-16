@@ -17,6 +17,8 @@ def main():
     print("=====data preparing=====")
     monthly,pivot_df_value, pivot_df_weight = data_preparing(train)
     pairs_value = find_comovement_pairs(pivot_df_value,pivot_df_value)
+    pairs_weight = find_comovement_pairs(pivot_df_weight,pivot_df_value)
+    all_pairs = pd.concat([pairs_value, pairs_weight])
 
     answer = input("EDA를 진행할까요? (y/n) >>")
     if answer == "y":
@@ -24,23 +26,24 @@ def main():
     elif answer == "n":
         print("EDA를 건너뜀\n")
 
-    print("탐색된 공행성쌍 수:", len(pairs_value))
+    print("탐색된 공행성쌍 수:", len(pairs_value) + len(pairs_weight))
     print("-------pairs_value-------")
     print(pairs_value.head())
-    #print("-------pairs_weight-------")
-    #print(pairs_weight.head())
+    print("-------pairs_weight-------")
+    print(pairs_weight.head())
     print("-------add_pairs-------")
     print(pairs_value.head())
     print("\n")
 
-    df_train = build_training_data(pivot_df_value, pivot_df_weight, pairs_value)
+    df_train = build_training_data(pivot_df_value, pivot_df_weight, all_pairs)
+    df_train, x_scaler, y_scaler = tranfrom_log_minmax(df_train)
     print(df_train)
     print("=======train_x,y split complete=======\n")
     hard_voting_model = automl(df_train)
     #hard_voting_model = model()
     #fit(hard_voting_model,df_train)
     print("=======voting model fit complete=======\n")
-    submission = predict(pivot_df_value,pivot_df_weight, pairs_value, hard_voting_model)
+    submission = predict(pivot_df_value,pivot_df_weight, all_pairs, hard_voting_model,x_scaler,y_scaler)
     print("=======predict complete=======\n")
     submission.head()
 

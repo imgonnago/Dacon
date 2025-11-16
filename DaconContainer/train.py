@@ -19,19 +19,20 @@ def create_train():
 def fit(model,df_train):
     feature_cols = ['b_t', 'b_t_1', 'a_t_lag','a_t_lag_weight', 'max_corr', 'best_lag']
 
-    train_X = df_train[feature_cols].values
-    train_y = df_train["target"].values
+    train_X = df_train[feature_cols]
+    train_y = df_train["target"]
 
     model.fit(train_X, train_y)
 
     return model
 
 
-def predict(pivot_df_value,pivot_df_weight, pairs, reg):
+def predict(pivot_df_value, pivot_df_weight, pairs, reg, x_scaler, y_scaler):
+
+    cols_to_scale = ['b_t', 'b_t_1', 'a_t_lag', 'a_t_lag_weight']
+
     months = pivot_df_value.columns.to_list()
     n_months = len(months)
-
-    # 가장 마지막 두 달 index (2025-7, 2025-6)
     t_last = n_months - 1
     t_prev = n_months - 2
 
@@ -50,7 +51,6 @@ def predict(pivot_df_value,pivot_df_weight, pairs, reg):
         b_series = pivot_df_value.loc[follower].values.astype(float)
         a_weight_series = pivot_df_weight.loc[leader].values.astype(float)
 
-        # t_last - lag 가 0 이상인 경우만 예측
         if t_last - lag < 0:
             continue
 
@@ -59,12 +59,22 @@ def predict(pivot_df_value,pivot_df_weight, pairs, reg):
         a_t_lag = a_series[t_last - lag]
         a_t_lag_weight = a_weight_series[t_last - lag]
 
-        X_test = np.array([[b_t, b_t_1, a_t_lag, a_t_lag_weight, corr, float(lag)]])
-        y_pred = reg.predict(X_test)[0]
+        X_test_df = pd.DataFrame({
+            "b_t": [b_t],
+            "b_t_1": [b_t_1],
+            "a_t_lag": [a_t_lag],
+            "a_t_lag_weight": [a_t_lag_weight],
+            "max_corr": [corr],
+            "best_lag": [float(lag)]
+        })
 
-        # (후처리 1) 음수 예측 → 0으로 변환
-        # (후처리 2) 소수점 → 정수 변환 (무역량은 정수 단위)
-        y_pred = max(0.0, float(y_pred))
+        X_test_df[cols_to_scale] = np.log1p(X_test_df[cols_to_scale])
+        X_test_df[cols_to_scale] = x_scaler.transform(X_test_df[cols_to_scale])
+        y_pred_scaled = reg.predict(X_test_df)[0]
+        y_pred_log = y_scaler.inverse_transform([[y_pred_scaled]])[0][0]
+        y_pred_raw = np.expm1(y_pred_log)
+
+        y_pred = max(0.0, float(y_pred_raw))
         y_pred = int(round(y_pred))
 
         preds.append({

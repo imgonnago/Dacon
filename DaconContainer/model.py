@@ -6,26 +6,27 @@ from sklearn.ensemble import RandomForestRegressor, VotingRegressor, ExtraTreesR
 
 # 회귀모델 학습
 def model():
-    model = ExtraTreesRegressor(
+    """model = ExtraTreesRegressor(
         n_estimators=47,
         max_features=1.0,
         max_leaf_nodes = 26582
 
     )
-    return model
+    return model"""
 
-    """xgb_model = xgb.XGBRegressor(
+    xgb_model = xgb.XGBRegressor(
+        device="cuda",
         objective='reg:absoluteerror',
-        n_estimators=400,
+        n_estimators=300,
         learning_rate=0.999,
         gamma=0.2,
-        max_depth=7,
-        min_child_weight=10,
+        max_depth=8,
+        min_child_weight=9,
         random_state=42,
         n_jobs=-1,
         eval_metric='mae'
     )
-    return xgb_model"""
+    return xgb_model
 
 
 
