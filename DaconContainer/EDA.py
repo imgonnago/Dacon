@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 
 def EDA_run(train):
-    monthly, pivot_df_value, pivot_df_weight = data_preparing(train)
+    monthly, pivot_df_value, pivot_df_weight, pivot_weight_smooth, pivot_value_smooth = data_preparing(train)
     print("=======EDA=======\n")
     print("-------TRAIN-------")
     print(train.head())
