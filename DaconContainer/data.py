@@ -12,35 +12,11 @@ def data_load():
     train.head()
     return train
 
-#로그변환 정규화 진행 ->  build_training_data 리턴값 사용
-def tranfrom_log_minmax(train):
-    feature_cols = ['b_t', 'b_t_1', 'a_t_lag', 'a_t_lag_weight','max_corr', 'best_lag','leading_hs4', 'following_hs4','a_t_lag_smooth', 'a_t_lag_weight_smooth']
-    selected_cols = [col for col in feature_cols if col in train.columns]
-    X_train_df = train[selected_cols].copy()
-    y_train_df = train[['target']].copy()
-
-    cols_to_scale = ['b_t', 'b_t_1', 'a_t_lag', 'a_t_lag_weight']
-    if 'a_t_lag_smooth' in X_train_df.columns:
-        cols_to_scale.extend(['a_t_lag_smooth', 'a_t_lag_weight_smooth'])
-
-    X_train_df[cols_to_scale] = np.log1p(X_train_df[cols_to_scale])
-    y_train_df['target'] = np.log1p(y_train_df['target'])
-
-    train = pd.concat([X_train_df, y_train_df], axis=1)
-
-    # target encoding
-    for col in ["leading_hs4", "following_hs4"]:
-        if col in train.columns:
-            means = train.groupby(col)["target"].mean()
-            train[col] = train[col].map(means)
-
-    return  train
-
 #pivot weight, value, monthly 생성
 def data_preparing(train):
     monthly = (
          train
-        .groupby(["item_id", "year", "month","hs4"], as_index=False)[["value","weight"]]
+        .groupby(["item_id", "year", "month"], as_index=False)[["value","weight"]]
         .sum()
     )
     # year, month를 하나의 키(ym)로 묶기
@@ -59,125 +35,88 @@ def data_preparing(train):
         .pivot(index="item_id", columns="ym", values="weight")
         .fillna(0.0)
     )
+    #pivot_df_value 데이터 스무딩한 피벗 데이터
     pivot_value_smooth = pivot_df_value.rolling(window=3, axis=1).mean().fillna(0)
+    #pivot_df_weight 데이터 스무딩한 피벗 데이터
     pivot_weight_smooth = pivot_df_weight.rolling(window=3, axis=1).mean().fillna(0)
 
 
     return monthly, pivot_df_value, pivot_df_weight, pivot_weight_smooth, pivot_value_smooth
 
-#공행성쌍 찾을때 사용
-def safe_corr(x, y):
-    if np.std(x) == 0 or np.std(y) == 0:
-        return 0.0
-    return float(np.corrcoef(x, y)[0, 1])
 
-
-#공생성쌍 탐색 -> pairs리턴
-def find_comovement_pairs(df_lead, df_follow, max_lag=12, min_nonzero=12, corr_threshold=0.4):
-    lead = df_lead.index.to_list()
-    follow = df_follow.index.to_list()
-    n_months = len(df_lead.columns)
-
-    results = []
-
-    for i, leader in tqdm(enumerate(lead)):
-        x = df_lead.loc[leader].values.astype(float)
-        if np.count_nonzero(x) < min_nonzero:
-            continue
-
-        for follower in follow:
-            if follower == leader:
-                continue
-
-            y = df_follow.loc[follower].values.astype(float)
-            if np.count_nonzero(y) < min_nonzero:
-                continue
-
-            best_lag = None
-            best_corr = 0.0
-
-            # lag = 1 ~ max_lag 탐색
-            for lag in range(1, max_lag + 1):
-                if n_months <= lag:
-                    continue
-                corr = safe_corr(x[:-lag], y[lag:])
-                if abs(corr) > abs(best_corr):
-                    best_corr = corr
-                    best_lag = lag
-
-            # 임계값 이상이면 공행성쌍으로 채택
-            if best_lag is not None and abs(best_corr) >= corr_threshold:
-                results.append({
-                    "leading_item_id": leader,
-                    "following_item_id": follower,
-                    "best_lag": best_lag,
-                    "max_corr": best_corr,
-                })
-
-    pairs = pd.DataFrame(results)
-    return pairs
-
-#학습데이터를 생성 -> 학습데이터에 weight, value를 로그, 정규화 해아햠
-def build_training_data(item_to_hs4_map, pivot_df_value, pivot_df_weight, pivot_val_smooth, pivot_wgt_smooth,pairs):
-    if pairs.empty: return pd.DataFrame()
-    months = pivot_df_value.columns.to_list()
+def build_training_data(
+    pivot_value,
+    pivot_weight,
+    pivot_value_smooth,
+    pivot_weight_smooth,
+    pairs
+):
+    """
+    공행성쌍 + 시계열을 이용해 (X, y) 학습 데이터를 만드는 함수
+    input X:
+      - b_t, b_t_1, a_t_lag, max_corr, best_lag
+    target y:
+      - b_t_plus_1
+    """
+    months = pivot_value.columns.to_list()
     n_months = len(months)
 
     rows = []
 
-    for row in pairs.itertuples(index=False):
+    for row in tqdm(pairs.itertuples(index=False), desc="build train data"):
         leader = row.leading_item_id
         follower = row.following_item_id
         lag = int(row.best_lag)
         corr = float(row.max_corr)
 
-
-        # [핵심 수정] 모든 데이터프레임(원본, 웨이트, 스무딩)에 인덱스가 존재하는지 체크
-        if (leader not in pivot_df_value.index or follower not in pivot_df_value.index or
-                leader not in pivot_val_smooth.index or follower not in pivot_val_smooth.index):
+        if leader not in pivot_value.index or follower not in pivot_value.index:
             continue
 
-            # 원본
-        a_series = pivot_df_value.loc[leader].values.astype(float)
-        a_weight_series = pivot_df_weight.loc[leader].values.astype(float)
-        b_series = pivot_df_value.loc[follower].values.astype(float)
-        a_series_smooth = pivot_val_smooth.loc[leader].values.astype(float)
-        a_weight_series_smooth = pivot_wgt_smooth.loc[leader].values.astype(float)
-        leader_hs4 = item_to_hs4_map.get(leader)
-        follower_hs4 = item_to_hs4_map.get(follower)
+        a_v = pivot_value.loc[leader].values.astype(float)
+        a_w = pivot_weight.loc[leader].values.astype(float)
+        a_vs = pivot_value_smooth.loc[leader].values.astype(float)
+        a_ws = pivot_weight_smooth.loc[leader].values.astype(float)
 
+        b_v = pivot_value.loc[follower].values.astype(float)
+        b_w = pivot_weight.loc[follower].values.astype(float)
+        b_vs = pivot_value_smooth.loc[follower].values.astype(float)
+        b_ws = pivot_weight_smooth.loc[follower].values.astype(float)
 
         # t+1이 존재하고, t-lag >= 0인 구간만 학습에 사용
         for t in range(max(lag, 1), n_months - 1):
-            b_t = b_series[t]
-            b_t_1 = b_series[t - 1]
-            a_t_lag = a_series[t - lag]
-            a_t_lag_weight = a_weight_series[t - lag]
-            b_t_plus_1 = b_series[t + 1]
-            a_t_lag_smooth=a_series_smooth[t - lag]
-            a_t_lag_weight_smooth=a_weight_series_smooth[t - lag]
+            b_t = b_v[t]
+            b_t_1 = b_v[t - 1]
+            a_t_lag = a_v[t - lag]
+            b_t_weight = b_w[t]
+            b_t_1_weight = b_w[t - 1]
+            a_t_lag_weight = a_w[t - lag]
+            a_t_lag_smooth_value = a_vs[t - lag]
+            a_t_lag_smooth_weight = a_ws[t - lag]
 
             rows.append({
+                # value series feature
                 "b_t": b_t,
                 "b_t_1": b_t_1,
                 "a_t_lag": a_t_lag,
+
+                # weight series feature
+                "b_t_weight": b_t_weight,
+                "b_t_1_weight": b_t_1_weight,
                 "a_t_lag_weight": a_t_lag_weight,
-                "a_t_lag_smooth": a_t_lag_smooth,
-                "a_t_lag_weight_smooth": a_t_lag_weight_smooth,
+
+                # smooth value feature
+                "a_t_lag_smooth_value": a_t_lag_smooth_value,
+
+                # smooth weight feature
+                "a_t_lag_smooth_weight": a_t_lag_smooth_weight,
+
+                # correlation info
                 "max_corr": corr,
                 "best_lag": float(lag),
-                "leading_hs4": leader_hs4,
-                "following_hs4": follower_hs4,
-                "target": b_t_plus_1,
+
+                # target
+                "target": b_v[t + 1]
             })
 
-
     df_train = pd.DataFrame(rows)
-    df_train["leading_hs4"] = df_train["leading_hs4"].astype(str)
-    df_train["following_hs4"] = df_train["following_hs4"].astype(str)
-
     return df_train
-
-
-#train[(train["item_id"]=="DBWLZWNK") & (train["year"] == 2023) & (train["month"] == 1)].value_counts()
-#monthly[(monthly["item_id"]=="DBWLZWNK") & (monthly["year"] == 2023) & (monthly["month"] == 1)].value_counts()

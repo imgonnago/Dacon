@@ -1,23 +1,27 @@
 
-
+from data import build_training_data
 from flaml import AutoML
 import time
 
-def automl(df_train_model):
+def automl(df_train):
+
     automl = AutoML(n_jobs=-1,gpu_per_trial= -1)
 
     settings = {
         "time_budget": 600,
         "task": "regression",
         "metric": "mae",
-        "estimator_list":  ['lgbm', 'xgboost', 'extra_tree', 'xgb_limitdepth', 'sgd', 'catboost'],
+        "estimator_list": "auto",
         "log_file_name": "automl_regression.log",
 
     }
 
     automl.fit(
-        dataframe=df_train_model,
+        dataframe=df_train,
         label = 'target',
+        eval_method='cv',
+        n_splits=6,
+
         **settings
     )
     print("\n" + "=" * 50)
