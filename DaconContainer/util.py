@@ -33,7 +33,7 @@ def safe_corr(x, y):
 def find_comovement_pairs(pivot_value,
     pivot_weight,
     pivot_value_smooth,
-    pivot_weight_smooth, max_lag=12, min_nonzero=12, corr_threshold=0.6):
+    pivot_weight_smooth, max_lag=12, min_nonzero=6, corr_threshold=0.6):
 
     items = pivot_value.index.to_list()
     months = pivot_value.columns.to_list()
@@ -65,6 +65,7 @@ def find_comovement_pairs(pivot_value,
 
             best_corr = 0.0
             best_lag = None
+            best_source = None
 
             # lag 탐색
             for lag in range(1, max_lag + 1):
@@ -73,25 +74,34 @@ def find_comovement_pairs(pivot_value,
 
                 corr_v = safe_corr(x_v[:-lag], y_v[lag:])
                 corr_w = safe_corr(x_w[:-lag], y_w[lag:])
+                corr_wv = safe_corr(x_w[:-lag], y_v[lag:])
                 corr_vs = safe_corr(x_vs[:-lag], y_vs[lag:])
                 corr_ws = safe_corr(x_ws[:-lag], y_ws[lag:])
+                corr_wvs = safe_corr(x_ws[:-lag], y_vs[lag:])
 
                 corr_list = [
                     ("value", corr_v),
                     ("weight", corr_w),
                     ("smooth_value", corr_vs),
                     ("smooth_weight", corr_ws),
+                    ("weight_value", corr_wv),
+                    ("smooth_weight_value", corr_wvs),
                 ]
 
                 for source, corr in corr_list:
-                    if abs(corr) >= corr_threshold:
-                        results.append({
-                            "leading_item_id": leader,
-                            "following_item_id": follower,
-                            "best_lag": lag,
-                            "max_corr": corr,
-                            "source": source,
-                        })
+                    if abs(corr) > abs(best_corr):
+                        best_corr = corr
+                        best_lag = lag
+                        best_source = source
+
+            if best_lag is not None and abs(best_corr) >= corr_threshold:
+                results.append({
+                    "leading_item_id": leader,
+                    "following_item_id": follower,
+                    "best_lag": best_lag,
+                    "max_corr": best_corr,
+                    "source": best_source,
+                })
 
     pairs = (
         pd.DataFrame(results)

@@ -8,7 +8,7 @@ def automl(df_train):
     automl = AutoML(n_jobs=-1,gpu_per_trial= -1)
 
     settings = {
-        "time_budget": 600,
+        "time_budget": 1800,
         "task": "regression",
         "metric": "mae",
         "estimator_list": "auto",
