@@ -4,7 +4,7 @@ from data import data_load, data_preparing,build_training_data
 from util import find_comovement_pairs, log1p_transform,baseline, evaluate_train
 from automl import automl
 from model import model
-from train import predict
+from train import predict, fit
 
 
 def main():
@@ -34,23 +34,19 @@ def main():
 
     df_train = build_training_data(
         pivot_df_value_log,
-        pivot_df_weight_log,
         pivot_value_smooth_log,
-        pivot_weight_smooth_log,
         pairs
     )
 
-    # Model = model()
+    #Model = model()
     Model = automl(df_train)
     print("fit...")
-    #Model = fit(df_train)
+    #Model = fit(df_train,Model)
     print("model fit complete!")
     print("predict...")
     submission = predict(
         pivot_df_value_log,
-        pivot_df_weight_log,
         pivot_value_smooth_log,
-        pivot_weight_smooth_log,
         pairs,
         Model
         )

@@ -46,9 +46,7 @@ def data_preparing(train):
 
 def build_training_data(
     pivot_value,
-    pivot_weight,
     pivot_value_smooth,
-    pivot_weight_smooth,
     pairs
 ):
     """
@@ -73,25 +71,20 @@ def build_training_data(
             continue
 
         a_v = pivot_value.loc[leader].values.astype(float)
-        a_w = pivot_weight.loc[leader].values.astype(float)
         a_vs = pivot_value_smooth.loc[leader].values.astype(float)
-        a_ws = pivot_weight_smooth.loc[leader].values.astype(float)
-
         b_v = pivot_value.loc[follower].values.astype(float)
-        b_w = pivot_weight.loc[follower].values.astype(float)
         b_vs = pivot_value_smooth.loc[follower].values.astype(float)
-        b_ws = pivot_weight_smooth.loc[follower].values.astype(float)
+
 
         # t+1이 존재하고, t-lag >= 0인 구간만 학습에 사용
         for t in range(max(lag, 1), n_months - 1):
             b_t = b_v[t]
             b_t_1 = b_v[t - 1]
             a_t_lag = a_v[t - lag]
-            b_t_weight = b_w[t]
-            b_t_1_weight = b_w[t - 1]
-            a_t_lag_weight = a_w[t - lag]
             a_t_lag_smooth_value = a_vs[t - lag]
-            a_t_lag_smooth_weight = a_ws[t - lag]
+            b_t_smooth_value = b_vs[t]
+            max_corr = corr
+            best_lag = float(lag)
 
             rows.append({
                 # value series feature
@@ -99,20 +92,13 @@ def build_training_data(
                 "b_t_1": b_t_1,
                 "a_t_lag": a_t_lag,
 
-                # weight series feature
-                "b_t_weight": b_t_weight,
-                "b_t_1_weight": b_t_1_weight,
-                "a_t_lag_weight": a_t_lag_weight,
-
-                # smooth value feature
+             # smooth value feature
                 "a_t_lag_smooth_value": a_t_lag_smooth_value,
-
-                # smooth weight feature
-                "a_t_lag_smooth_weight": a_t_lag_smooth_weight,
+                "b_t_smooth_value": b_t_smooth_value,
 
                 # correlation info
-                "max_corr": corr,
-                "best_lag": float(lag),
+                "max_corr": max_corr,
+                "best_lag": best_lag,
 
                 # target
                 "target": b_v[t + 1]

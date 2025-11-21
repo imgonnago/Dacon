@@ -33,7 +33,7 @@ def safe_corr(x, y):
 def find_comovement_pairs(pivot_value,
     pivot_weight,
     pivot_value_smooth,
-    pivot_weight_smooth, max_lag=12, min_nonzero=6, corr_threshold=0.6):
+    pivot_weight_smooth, max_lag=24, min_nonzero=12, corr_threshold=0.7):
 
     items = pivot_value.index.to_list()
     months = pivot_value.columns.to_list()
@@ -123,10 +123,8 @@ def evaluate_train(df_train, model):
     df_train: build_training_data로 만든 train 데이터
     model: 학습 완료된 모델
     """
-    X_train = df_train[["b_t", "b_t_1", "a_t_lag",
-                        "b_t_weight", "b_t_1_weight", "a_t_lag_weight",
-                        "a_t_lag_smooth_value", "a_t_lag_smooth_weight",
-                        "max_corr", "best_lag"]]
+    X_train = df_train[["b_t", "b_t_1", "a_t_lag", "a_t_lag_smooth_value",
+                     "b_t_smooth_value", "max_corr", "best_lag"]]
     y_train = df_train["target"]
 
     # 예측

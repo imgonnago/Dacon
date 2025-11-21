@@ -8,10 +8,8 @@ from data import build_training_data
 
 def fit(df_train,model):
 
-    X = df_train[[
-        "b_t", "b_t_1", "a_t_lag", "b_t_weight",
-        "b_t_1_weight", "a_t_lag_weight", "a_t_lag_smooth_value",
-        "a_t_lag_smooth_weight", "max_corr", "best_lag"]]
+    X = df_train[["b_t", "b_t_1", "a_t_lag", "a_t_lag_smooth_value",
+                     "b_t_smooth_value", "max_corr", "best_lag"]]
 
     y = df_train["target"]
 
@@ -21,9 +19,7 @@ def fit(df_train,model):
 
 def predict(
         pivot_value,
-        pivot_weight,
         pivot_value_smooth,
-        pivot_weight_smooth,
         pairs,
         model):
 
@@ -46,12 +42,9 @@ def predict(
             continue
 
         a_v = pivot_value.loc[leader].values.astype(float)
-        a_w = pivot_weight.loc[leader].values.astype(float)
         a_vs = pivot_value_smooth.loc[leader].values.astype(float)
-        a_ws = pivot_weight_smooth.loc[leader].values.astype(float)
-
         b_v = pivot_value.loc[follower].values.astype(float)
-        b_w = pivot_weight.loc[follower].values.astype(float)
+        b_vs = pivot_value_smooth.loc[follower].values.astype(float)
 
         # t_last - lag 가 0 이상인 경우만 예측
         if t_last - lag < 0:
@@ -60,21 +53,16 @@ def predict(
         b_t = b_v[t_last]
         b_t_1 = b_v[t_prev]
         a_t_lag = a_v[t_last - lag]
-
-        b_t_weight = b_w[t_last]
-        b_t_1_weight = b_w[t_prev]
-        a_t_lag_weight = a_w[t_last - lag]
-
         a_t_lag_smooth_value = a_vs[t_last - lag]
-        a_t_lag_smooth_weight = a_ws[t_last - lag]
+        b_t_smooth_value = b_vs[t_last]
+        max_corr = corr
+        best_lag = float(lag)
 
         X_test = pd.DataFrame(
-            [[b_t, b_t_1, a_t_lag, b_t_weight, b_t_1_weight,
-              a_t_lag_weight, a_t_lag_smooth_value, a_t_lag_smooth_weight,
-              corr, float(lag)]],
-            columns=["b_t", "b_t_1", "a_t_lag", "b_t_weight", "b_t_1_weight",
-                     "a_t_lag_weight", "a_t_lag_smooth_value", "a_t_lag_smooth_weight",
-                     "max_corr", "best_lag"]
+            [[b_t, b_t_1, a_t_lag, a_t_lag_smooth_value,
+              b_t_smooth_value, max_corr, best_lag]],
+            columns=["b_t", "b_t_1", "a_t_lag", "a_t_lag_smooth_value",
+                     "b_t_smooth_value", "max_corr", "best_lag"]
         )
 
         y_pred = model.predict(X_test)[0]
