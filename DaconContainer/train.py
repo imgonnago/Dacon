@@ -8,8 +8,7 @@ from data import build_training_data
 
 def fit(df_train,model):
 
-    X = df_train[["b_t", "b_t_1", "a_t_lag", "a_t_lag_smooth_value",
-                     "b_t_smooth_value", "max_corr", "best_lag"]]
+    X = df_train[["b_t", "b_t_1", "a_t_lag", "max_corr", "best_lag"]]
 
     y = df_train["target"]
 
@@ -59,10 +58,8 @@ def predict(
         best_lag = float(lag)
 
         X_test = pd.DataFrame(
-            [[b_t, b_t_1, a_t_lag, a_t_lag_smooth_value,
-              b_t_smooth_value, max_corr, best_lag]],
-            columns=["b_t", "b_t_1", "a_t_lag", "a_t_lag_smooth_value",
-                     "b_t_smooth_value", "max_corr", "best_lag"]
+            [[b_t, b_t_1, a_t_lag, max_corr, best_lag]],
+            columns=["b_t", "b_t_1", "a_t_lag", "max_corr", "best_lag"]
         )
 
         y_pred = model.predict(X_test)[0]

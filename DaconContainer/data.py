@@ -93,8 +93,8 @@ def build_training_data(
                 "a_t_lag": a_t_lag,
 
              # smooth value feature
-                "a_t_lag_smooth_value": a_t_lag_smooth_value,
-                "b_t_smooth_value": b_t_smooth_value,
+                #"a_t_lag_smooth_value": a_t_lag_smooth_value,
+                #"b_t_smooth_value": b_t_smooth_value,
 
                 # correlation info
                 "max_corr": max_corr,

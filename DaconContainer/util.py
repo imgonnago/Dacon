@@ -129,8 +129,7 @@ def evaluate_train(df_train, model):
     df_train: build_training_data로 만든 train 데이터
     model: 학습 완료된 모델
     """
-    X_train = df_train[["b_t", "b_t_1", "a_t_lag", "a_t_lag_smooth_value",
-                     "b_t_smooth_value", "max_corr", "best_lag"]]
+    X_train = df_train[["b_t", "b_t_1", "a_t_lag", "max_corr", "best_lag"]]
     y_train = df_train["target"]
 
     # 예측
