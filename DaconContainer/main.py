@@ -38,10 +38,10 @@ def main():
         pairs
     )
 
-    #Model = model()
-    Model = automl(df_train)
+    Model = model()
+    #Model = automl(df_train)
     print("fit...")
-    #Model = fit(df_train,Model)
+    Model = fit(df_train,Model)
     print("model fit complete!")
     print("predict...")
     submission = predict(

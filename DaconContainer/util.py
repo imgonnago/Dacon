@@ -24,16 +24,19 @@ def baseline(submission):
         print("you didn't choose os enviroment")
         return 1
 
-
 def safe_corr(x, y):
     if np.std(x) == 0 or np.std(y) == 0:
         return 0.0
     return float(np.corrcoef(x, y)[0, 1])
 
-def find_comovement_pairs(pivot_value,
-    pivot_weight,
+def find_comovement_pairs(
+    pivot_value,
+    pivot_weight,               # 형태는 유지하지만 사용 안함
     pivot_value_smooth,
-    pivot_weight_smooth, max_lag=24, min_nonzero=12, corr_threshold=0.7):
+    pivot_weight_smooth,        # 형태는 유지하지만 사용 안함
+    max_lag=12,
+    min_nonzero=3,
+    corr_threshold=0.35):
 
     items = pivot_value.index.to_list()
     months = pivot_value.columns.to_list()
@@ -41,13 +44,9 @@ def find_comovement_pairs(pivot_value,
 
     results = []
 
-    for leader in tqdm(items,desc="Finding Pairs"):
+    for leader in tqdm(items, desc="Finding Pairs"):
         x_v = pivot_value.loc[leader].values.astype(float)
-        x_w = pivot_weight.loc[leader].values.astype(float)
-        x_vs = pivot_value_smooth.loc[leader].values.astype(float)
-        x_ws = pivot_weight_smooth.loc[leader].values.astype(float)
 
-        # 최소 데이터 개수 체크
         if np.count_nonzero(x_v) < min_nonzero:
             continue
 
@@ -56,43 +55,22 @@ def find_comovement_pairs(pivot_value,
                 continue
 
             y_v = pivot_value.loc[follower].values.astype(float)
-            y_w = pivot_weight.loc[follower].values.astype(float)
-            y_vs = pivot_value_smooth.loc[follower].values.astype(float)
-            y_ws = pivot_weight_smooth.loc[follower].values.astype(float)
-
             if np.count_nonzero(y_v) < min_nonzero:
                 continue
 
             best_corr = 0.0
             best_lag = None
-            best_source = None
+            best_source = "value"   # value만 사용
 
-            # lag 탐색
             for lag in range(1, max_lag + 1):
                 if n_months <= lag:
                     continue
 
                 corr_v = safe_corr(x_v[:-lag], y_v[lag:])
-                corr_w = safe_corr(x_w[:-lag], y_w[lag:])
-                corr_wv = safe_corr(x_w[:-lag], y_v[lag:])
-                corr_vs = safe_corr(x_vs[:-lag], y_vs[lag:])
-                corr_ws = safe_corr(x_ws[:-lag], y_ws[lag:])
-                corr_wvs = safe_corr(x_ws[:-lag], y_vs[lag:])
 
-                corr_list = [
-                    ("value", corr_v),
-                    ("weight", corr_w),
-                    ("smooth_value", corr_vs),
-                    ("smooth_weight", corr_ws),
-                    ("weight_value", corr_wv),
-                    ("smooth_weight_value", corr_wvs),
-                ]
-
-                for source, corr in corr_list:
-                    if abs(corr) > abs(best_corr):
-                        best_corr = corr
-                        best_lag = lag
-                        best_source = source
+                if abs(corr_v) > abs(best_corr):
+                    best_corr = corr_v
+                    best_lag = lag
 
             if best_lag is not None and abs(best_corr) >= corr_threshold:
                 results.append({
@@ -112,6 +90,7 @@ def find_comovement_pairs(pivot_value,
     )
 
     return pairs
+
 
 def log1p_transform(dataset):
     return np.log1p(dataset)
