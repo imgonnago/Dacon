@@ -35,8 +35,8 @@ def find_comovement_pairs(
     pivot_value_smooth,
     pivot_weight_smooth,        # 형태는 유지하지만 사용 안함
     max_lag=12,
-    min_nonzero=3,
-    corr_threshold=0.35):
+    min_nonzero=12,
+    corr_threshold=0.4):
 
     items = pivot_value.index.to_list()
     months = pivot_value.columns.to_list()
@@ -45,8 +45,12 @@ def find_comovement_pairs(
     results = []
 
     for leader in tqdm(items, desc="Finding Pairs"):
-        x_v = pivot_value.loc[leader].values.astype(float)
 
+        x_v = pivot_value.loc[leader].values.astype(float)
+        x_w = pivot_weight.loc[leader].values.astype(float)
+        x_sv = pivot_value_smooth.loc[leader].values.astype(float)
+        x_sw = pivot_weight_smooth.loc[leader].values.astype(float)
+        diff_xv = np.diff(np.log1p(x_v))
         if np.count_nonzero(x_v) < min_nonzero:
             continue
 
@@ -54,23 +58,46 @@ def find_comovement_pairs(
             if follower == leader:
                 continue
 
+
             y_v = pivot_value.loc[follower].values.astype(float)
+            y_w = pivot_weight.loc[follower].values.astype(float)
+            y_sv = pivot_value_smooth.loc[follower].values.astype(float)
+            y_sw = pivot_weight_smooth.loc[follower].values.astype(float)
+            diff_yv = np.diff(np.log1p(y_v))
+
             if np.count_nonzero(y_v) < min_nonzero:
                 continue
 
             best_corr = 0.0
             best_lag = None
-            best_source = "value"   # value만 사용
+            best_source = None
 
             for lag in range(1, max_lag + 1):
                 if n_months <= lag:
                     continue
 
-                corr_v = safe_corr(x_v[:-lag], y_v[lag:])
+                corr_vv = safe_corr(x_v[:-lag], y_v[lag:])
+                corr_wv = safe_corr(x_w[:-lag], y_v[lag:])
+                corr_svv = safe_corr(x_sv[:-lag], y_sv[lag:])
+                corr_swv = safe_corr(x_sw[:-lag], y_sv[lag:])
+                corr_sww = safe_corr(x_sw[:-lag], y_sw[lag:])
+                corr_diff = safe_corr(diff_xv[:-lag], diff_yv[lag:])
 
-                if abs(corr_v) > abs(best_corr):
-                    best_corr = corr_v
-                    best_lag = lag
+                corr_list=[
+                    ("vv", corr_vv),
+                    #("wv", corr_wv),
+                    #("svv", corr_svv),
+                    #("swv", corr_swv),
+                    #("sww", corr_sww),
+                    #("diffvv", corr_diff)
+                ]
+
+
+                for source, corr in corr_list:
+                    if abs(corr) > abs(best_corr):
+                        best_corr = corr
+                        best_lag = lag
+                        best_source = source
 
             if best_lag is not None and abs(best_corr) >= corr_threshold:
                 results.append({
