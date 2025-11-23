@@ -43,12 +43,7 @@ def data_preparing(train):
 
     return monthly, pivot_df_value, pivot_df_weight, pivot_weight_smooth, pivot_value_smooth
 
-
-def build_training_data(
-    pivot_value,
-    pivot_value_smooth,
-    pairs
-):
+def build_training_data(pivot, pairs):
     """
     공행성쌍 + 시계열을 이용해 (X, y) 학습 데이터를 만드는 함수
     input X:
@@ -56,7 +51,7 @@ def build_training_data(
     target y:
       - b_t_plus_1
     """
-    months = pivot_value.columns.to_list()
+    months = pivot.columns.to_list()
     n_months = len(months)
 
     rows = []
@@ -67,41 +62,26 @@ def build_training_data(
         lag = int(row.best_lag)
         corr = float(row.max_corr)
 
-        if leader not in pivot_value.index or follower not in pivot_value.index:
+        if leader not in pivot.index or follower not in pivot.index:
             continue
 
-        a_v = pivot_value.loc[leader].values.astype(float)
-        a_vs = pivot_value_smooth.loc[leader].values.astype(float)
-        b_v = pivot_value.loc[follower].values.astype(float)
-        b_vs = pivot_value_smooth.loc[follower].values.astype(float)
-
+        a_series = pivot.loc[leader].values.astype(float)
+        b_series = pivot.loc[follower].values.astype(float)
 
         # t+1이 존재하고, t-lag >= 0인 구간만 학습에 사용
         for t in range(max(lag, 1), n_months - 1):
-            b_t = b_v[t]
-            b_t_1 = b_v[t - 1]
-            a_t_lag = a_v[t - lag]
-            a_t_lag_smooth_value = a_vs[t - lag]
-            b_t_smooth_value = b_vs[t]
-            max_corr = corr
-            best_lag = float(lag)
+            b_t = b_series[t]
+            b_t_1 = b_series[t - 1]
+            a_t_lag = a_series[t - lag]
+            b_t_plus_1 = b_series[t + 1]
 
             rows.append({
-                # value series feature
                 "b_t": b_t,
                 "b_t_1": b_t_1,
                 "a_t_lag": a_t_lag,
-
-             # smooth value feature
-                #"a_t_lag_smooth_value": a_t_lag_smooth_value,
-                #"b_t_smooth_value": b_t_smooth_value,
-
-                # correlation info
-                "max_corr": max_corr,
-                "best_lag": best_lag,
-
-                # target
-                "target": b_v[t + 1]
+                "max_corr": corr,
+                "best_lag": float(lag),
+                "target": np.log1p(b_t_plus_1),
             })
 
     df_train = pd.DataFrame(rows)

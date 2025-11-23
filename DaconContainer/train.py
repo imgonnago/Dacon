@@ -15,14 +15,8 @@ def fit(df_train,model):
     model.fit(X, y)
     return model
 
-
-def predict(
-        pivot_value,
-        pivot_value_smooth,
-        pairs,
-        model):
-
-    months = pivot_value.columns.to_list()
+def predict(pivot, pairs, reg):
+    months = pivot.columns.to_list()
     n_months = len(months)
 
     # 가장 마지막 두 달 index (2025-7, 2025-6)
@@ -31,46 +25,38 @@ def predict(
 
     preds = []
 
-    for row in tqdm(pairs.itertuples(index=False), desc="model predict..."):
+    for row in tqdm(pairs.itertuples(index=False)):
         leader = row.leading_item_id
         follower = row.following_item_id
         lag = int(row.best_lag)
         corr = float(row.max_corr)
 
-        if leader not in pivot_value.index or follower not in pivot_value.index:
+        if leader not in pivot.index or follower not in pivot.index:
             continue
 
-        a_v = pivot_value.loc[leader].values.astype(float)
-        a_vs = pivot_value_smooth.loc[leader].values.astype(float)
-        b_v = pivot_value.loc[follower].values.astype(float)
-        b_vs = pivot_value_smooth.loc[follower].values.astype(float)
+        a_series = pivot.loc[leader].values.astype(float)
+        b_series = pivot.loc[follower].values.astype(float)
 
         # t_last - lag 가 0 이상인 경우만 예측
         if t_last - lag < 0:
             continue
 
-        b_t = b_v[t_last]
-        b_t_1 = b_v[t_prev]
-        a_t_lag = a_v[t_last - lag]
-        a_t_lag_smooth_value = a_vs[t_last - lag]
-        b_t_smooth_value = b_vs[t_last]
-        max_corr = corr
-        best_lag = float(lag)
+        b_t = b_series[t_last]
+        b_t_1 = b_series[t_prev]
+        a_t_lag = a_series[t_last - lag]
 
-        X_test = pd.DataFrame(
-            [[b_t, b_t_1, a_t_lag, max_corr, best_lag]],
-            columns=["b_t", "b_t_1", "a_t_lag", "max_corr", "best_lag"]
-        )
+        X_test = np.array([[b_t, b_t_1, a_t_lag, corr, float(lag)]])
+        y_pred = reg.predict(X_test)[0]
 
-        y_pred = model.predict(X_test)[0]
-
-        #value값 log1p 에서 역변환
+        # value값 log1p 에서 역변환
         y_pred = np.expm1(y_pred)
 
         # (후처리 1) 음수 예측 → 0으로 변환
         # (후처리 2) 소수점 → 정수 변환 (무역량은 정수 단위)
         y_pred = max(0.0, float(y_pred))
         y_pred = int(round(y_pred))
+
+
 
         preds.append({
             "leading_item_id": leader,
@@ -80,6 +66,8 @@ def predict(
 
     df_pred = pd.DataFrame(preds)
     return df_pred
+
+
 
 
 
