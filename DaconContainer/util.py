@@ -34,10 +34,10 @@ def find_comovement_pairs(
     pivot_weight,
     pivot_value_smooth,
     pivot_weight_smooth,
-    max_lag=18,
-    min_nonzero=8,
-    value_threshold=0.32,   # 1차 value 필터
-    final_threshold=0.38    # 최종 필터
+    max_lag=12,
+    min_nonzero=12,
+    value_threshold=0.37,   # 1차 value 필터
+    final_threshold=0.4    # 최종 필터
 ):
 
     items = pivot_value.index.to_list()

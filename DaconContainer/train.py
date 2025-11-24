@@ -68,6 +68,65 @@ def predict(pivot, pairs, reg):
     return df_pred
 
 
+def predict_ensemble(pivot, pairs, model_xgb, model_cat, w_xgb=0.4, w_cat=0.6):
+    months = pivot.columns.to_list()
+    n_months = len(months)
+    t_last = n_months - 1
+    t_prev = n_months - 2
+    preds = []
+
+    for row in tqdm(pairs.itertuples(index=False), desc="Ensemble Predict"):
+        leader = row.leading_item_id
+        follower = row.following_item_id
+        lag = int(row.best_lag)
+        corr = float(row.max_corr)
+
+        if leader not in pivot.index or follower not in pivot.index:
+            continue
+
+        # t_last - lag 계산 (예외 처리)
+        if t_last - lag < 0:
+            continue
+
+        a_series = pivot.loc[leader].values.astype(float)
+        b_series = pivot.loc[follower].values.astype(float)
+
+        b_t = b_series[t_last]
+        b_t_1 = b_series[t_prev]
+        a_t_lag = a_series[t_last - lag]
+
+        # 모델에 들어갈 입력값 (수치형만 사용)
+        X_test = pd.DataFrame([{
+            "b_t": b_t,
+            "b_t_1": b_t_1,
+            "a_t_lag": a_t_lag,
+            "max_corr": corr,
+            "best_lag": float(lag)
+        }])
+
+        # 1. 각각 예측
+        pred_xgb_log = model_xgb.predict(X_test)[0]
+        pred_cat_log = model_cat.predict(X_test)[0]
+
+        # 2. 역변환 (Log -> Original)
+        val_xgb = np.expm1(pred_xgb_log)
+        val_cat = np.expm1(pred_cat_log)
+
+        # 3. 소프트 보팅 (가중 평균)
+        final_val = (val_xgb * w_xgb) + (val_cat * w_cat)
+
+        # 4. 후처리 (음수 제거 및 정수 반올림)
+        final_val = max(0.0, float(final_val))
+        final_val = int(round(final_val))
+
+        preds.append({
+            "leading_item_id": leader,
+            "following_item_id": follower,
+            "value": final_val,
+        })
+
+    df_pred = pd.DataFrame(preds)
+    return df_pred
 
 
 
