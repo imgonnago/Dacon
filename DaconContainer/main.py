@@ -1,19 +1,18 @@
-#main.py
+# main.py
 import pandas as pd
-from data import data_load, data_preparing,build_training_data
-from util import find_comovement_pairs, log1p_transform ,baseline, evaluate_train
-from automl import automl
-from model import model
-from train import predict, fit
+from data import data_load, data_preparing, build_training_data
+from util import find_comovement_pairs, baseline, evaluate_train
+from model import get_xgb_model, get_cat_model  # [변경] 함수 이름 변경
+from train import fit, predict_ensemble  # [변경] predict 대신 predict_ensemble 사용
 
 
 def main():
     print("data loading...")
     data = data_load()
     print("data loading complete!")
+
     monthly, pivot_df_value, pivot_df_weight, pivot_value_smooth, pivot_weight_smooth = data_preparing(data)
-    print("monthly, pivot_df_value, pivot_df_weight, pivot_value_smooth, pivot_weight_smooth is created")
-    print(f"pivot_df_value\n{pivot_df_value}")
+
     print("=======find comovement pairs=======")
     pairs = find_comovement_pairs(
         pivot_df_value,
@@ -21,36 +20,49 @@ def main():
         pivot_value_smooth,
         pivot_weight_smooth
     )
-    print(f"comovement finding complete\n{pairs}")
     print(f" 탐색한 공행성쌍 수: {len(pairs)}")
-    print("=======create model=======")
 
+    print("=======build training data=======")
     df_train = build_training_data(
         pivot_df_value,
         pairs
     )
 
-    Model = model()
-    #Model = automl(df_train)
-    print("fit...")
-    Model = fit(df_train,Model)
+    # 1. 모델 두 개 생성
+    print("=======create models=======")
+    model_xgb = get_xgb_model()
+    model_cat = get_cat_model()
+
+    # 2. 각각 학습 (Fit)
+    print("Fitting XGBoost...")
+    model_xgb = fit(df_train, model_xgb)
+
+    print("Fitting CatBoost...")
+    model_cat = fit(df_train, model_cat)
     print("model fit complete!")
-    print("predict...")
-    submission = predict(
+
+    # 3. 앙상블 예측 (Soft Voting)
+    print("Ensemble predicting...")
+    submission = predict_ensemble(
         pivot_df_value,
         pairs,
-        Model
-        )
+        model_xgb,
+        model_cat,
+        w_xgb=0.4,  # XGBoost 가중치
+        w_cat=0.6  # CatBoost 가중치
+    )
     print("model predict complete!")
 
-    rmse, mae, nmae = evaluate_train(df_train, Model)
-    print(f"train 정확도\n rmse: {rmse}\n mae: {mae}\n nmae: {nmae}")
+    # (참고) evaluate_train은 앙상블된 모델 하나가 아니므로
+    # 여기서는 생략하거나, 개별 모델 성능만 확인해야 합니다.
+    # print("=======Evaluate XGBoost Only (Reference)=======")
+    # evaluate_train(df_train, model_xgb)
 
     answer = baseline(submission)
     if answer == "m":
-        print("baseline_submission 생성완료 (Dacon/baselinez)")
+        print("baseline_submission 생성완료 (Mac)")
     elif answer == "w":
-        print("baseline_submission 생성완료 (Dacon/baseline)")
+        print("baseline_submission 생성완료 (Windows)")
     elif answer == 1:
         print("baseline_submission 생성실패")
 
