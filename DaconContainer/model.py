@@ -25,7 +25,6 @@ def model(df_train):
 def get_xgb_model():
     xgb_model = xgb.XGBRegressor(
         objective='reg:absoluteerror',
-        device="gpu",          # GPU 없으면 "cpu"
         tree_method="hist",
         n_estimators=300,
         learning_rate=0.09999,
@@ -43,16 +42,15 @@ def get_xgb_model():
 # 2. CatBoost 모델
 def get_cat_model():
     cat_model = CatBoostRegressor(
-        iterations=2000,
-        learning_rate=0.05,
-        depth=7,
+        iterations=2500,
+        learning_rate=0.12,
+        depth=9,
         loss_function='MAE',
         random_state=42,
         verbose=100,
         allow_writing_files=False,
         l2_leaf_reg=3,
         bagging_temperature=1,
-        task_type='GPU',       # GPU 없으면 'CPU'
         early_stopping_rounds=100
     )
     return cat_model
