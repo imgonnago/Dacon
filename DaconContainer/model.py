@@ -42,9 +42,9 @@ def get_xgb_model():
 # 2. CatBoost 모델
 def get_cat_model():
     cat_model = CatBoostRegressor(
-        iterations=2500,
-        learning_rate=0.12,
-        depth=9,
+        iterations=3000,
+        learning_rate=0.15,
+        depth=10,
         loss_function='MAE',
         random_state=42,
         verbose=100,

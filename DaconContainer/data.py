@@ -30,16 +30,11 @@ def data_preparing(train):
     )
 
     pivot_smooth_value = pivot_value.T.rolling(window=3).mean().T.fillna(0)
-    pivot_smooth_6 = pivot_value.T.rolling(window=6).mean().T.fillna(0)
-    pivot_std_3 = pivot_value.T.rolling(window=3).std().T.fillna(0)
 
-    return monthly, pivot_value, pivot_smooth_value, pivot_std_3, pivot_smooth_6
+    return monthly, pivot_value, pivot_smooth_value
 
 def build_training_data(
         pivot_value,
-        pivot_smooth_value,
-        pivot_std_3,
-        pivot_smooth_6,
         pairs
     ):
     """
@@ -64,10 +59,6 @@ def build_training_data(
             continue
 
         a_series = pivot_value.loc[leader].values.astype(float)
-        a_val = pivot_value.loc[leader].values
-        a_sm3 = pivot_smooth_value.loc[leader].values
-        a_std3 = pivot_std_3.loc[leader].values
-        a_sm6 = pivot_smooth_6.loc[leader].values
         b_series = pivot_value.loc[follower].values.astype(float)
 
         # t+1이 존재하고, t-lag >= 0인 구간만 학습에 사용
@@ -77,18 +68,6 @@ def build_training_data(
             a_t_lag = a_series[t - lag]
             b_t_plus_1 = b_series[t + 1]
 
-            idx = t + 1 - lag
-            if idx < 0: continue
-
-            val_lag = a_val[idx]  # 원본 값
-            sm3_lag = a_sm3[idx]  # 3개월 평균
-            std3_lag = a_std3[idx]  # 3개월 변동성
-            sm6_lag = a_sm6[idx]  # 6개월 평균
-
-            disparity = val_lag / (sm3_lag + 1)
-
-            # 2. 골든크로스 신호: 단기 추세가 장기 추세보다 높은가?
-            trend_strength = sm3_lag / (sm6_lag + 1)
 
             rows.append({
                 "b_t": b_t,
@@ -96,10 +75,6 @@ def build_training_data(
                 "a_t_lag": a_t_lag,
                 "max_corr": corr,
                 "best_lag": float(lag),
-                "a_smooth_3": sm3_lag,      # 안정적 추세
-                "a_std_3": std3_lag,  # 리스크(변동성)
-                "a_disparity": disparity,  # 괴리율 (스케일링 효과)
-                "a_trend_strength": trend_strength,  # 상승/하락 강도
                 "target": np.log1p(b_t_plus_1),
             })
 

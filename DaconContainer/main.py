@@ -14,14 +14,13 @@ def main():
     print("data loading complete!")
     print("=" * 80)
 
-    monthly, pivot_df_value, pivot_value_smooth, pivot_std_3, pivot_smooth_6 = data_preparing(data)
+    monthly, pivot_df_value, pivot_value_smooth = data_preparing(data)
     print(pivot_df_value)
     print("=" * 80)
     print("find comovement pairs")
     print("=" * 80)
     pairs = find_comovement_pairs(
-        pivot_df_value,
-        pivot_value_smooth
+        pivot_df_value
     )
     print(pairs)
     print("=" * 80)
@@ -31,9 +30,6 @@ def main():
     print("=" * 80)
     df_train = build_training_data(
         pivot_df_value,
-        pivot_value_smooth,
-        pivot_std_3,
-        pivot_smooth_6,
         pairs
     )
     print(df_train)
