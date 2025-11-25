@@ -1,7 +1,6 @@
 # main.py
 import pandas as pd
 
-from DaconContainer.model import get_rf_model
 from automl import automl
 from data import data_load, data_preparing, build_training_data
 from util import find_comovement_pairs, baseline, evaluate_train
@@ -12,17 +11,19 @@ def main():
     print("="*80)
     print("data loading...")
     data = data_load()
-    print("=" * 80)
     print("data loading complete!")
     print("=" * 80)
 
-    monthly, pivot_df_value, pivot_df_weight, pivot_value_smooth, pivot_weight_smooth = data_preparing(data)
+    monthly, pivot_df_value, pivot_value_smooth, pivot_std_3, pivot_smooth_6 = data_preparing(data)
+    print(pivot_df_value)
     print("=" * 80)
     print("find comovement pairs")
     print("=" * 80)
     pairs = find_comovement_pairs(
         pivot_df_value,
+        pivot_value_smooth
     )
+    print(pairs)
     print("=" * 80)
     print(f" 탐색한 공행성쌍 수: {len(pairs)}")
     print("=" * 80)
@@ -30,9 +31,12 @@ def main():
     print("=" * 80)
     df_train = build_training_data(
         pivot_df_value,
+        pivot_value_smooth,
+        pivot_std_3,
+        pivot_smooth_6,
         pairs
     )
-
+    print(df_train)
     #모델 두 개 생성
     """print("=" * 80)
     print("automl")
@@ -43,21 +47,13 @@ def main():
     print("=" * 80)
     model_xgb = get_xgb_model()
     model_cat = get_cat_model()
-    model_rf = get_rf_model()
     print("=" * 80)
     print("Fitting XGBoost...")
     print("=" * 80)
     model_xgb = fit(df_train, model_xgb)
-    print("=" * 80)
     print("Fitting CatBoost...")
     print("=" * 80)
     model_cat = fit(df_train, model_cat)
-    print("=" * 80)
-    print("Fitting RandomForest")
-    print("=" * 80)
-    model_rf = fit(df_train, model_rf)
-
-
     print("model fit complete!")
     print("=" * 80)
 
@@ -67,6 +63,7 @@ def main():
         pairs,
         model
     )"""
+
     #앙상블 예측
     print("=" * 80)
     print("Ensemble predicting...")
@@ -76,11 +73,10 @@ def main():
         pairs,
         model_xgb,
         model_cat,
-        model_rf,
-        w_xgb=0.3,  # XGBoost 가중치
-        w_cat=0.5,  # CatBoost 가중치
-        w_rf=0.2
+        w_xgb=0.4,  # XGBoost 가중치
+        w_cat=0.6   # CatBoost 가중치
     )
+
     print("=" * 80)
     print("model predict complete!")
     print("=" * 80)

@@ -55,11 +55,11 @@ def get_cat_model():
     )
     return cat_model
 
-def get_rf_model():
+"""def get_rf_model():
     rf_model = RandomForestRegressor(
         n_estimators=2047,
         max_features=1.0,
         max_leaf_nodes=4867
     )
-    return rf_model
+    return rf_model"""
 

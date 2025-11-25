@@ -68,7 +68,7 @@ def predict(pivot, pairs, reg):
     return df_pred
 
 
-def predict_ensemble(pivot, pairs, model_xgb, model_cat, model_rf, w_xgb = 0.3, w_cat = 0.5, w_rf = 0.2):
+def predict_ensemble(pivot, pairs, model_xgb, model_cat, w_xgb = 0.4, w_cat = 0.6):
     months = pivot.columns.to_list()
     n_months = len(months)
     t_last = n_months - 1
@@ -107,15 +107,13 @@ def predict_ensemble(pivot, pairs, model_xgb, model_cat, model_rf, w_xgb = 0.3, 
         # 1. 각각 예측
         pred_xgb_log = model_xgb.predict(X_test)[0]
         pred_cat_log = model_cat.predict(X_test)[0]
-        pred_rf_log = model_rf.predict(X_test)[0]
 
         # 2. 역변환 (Log -> Original)
         val_xgb = np.expm1(pred_xgb_log)
         val_cat = np.expm1(pred_cat_log)
-        val_rf = np.expm1(pred_rf_log)
 
         # 3. 소프트 보팅 (가중 평균)
-        final_val = (val_xgb * w_xgb) + (val_cat * w_cat) + (val_rf * w_rf)
+        final_val = (val_xgb * w_xgb) + (val_cat * w_cat)
 
         # 4. 후처리 (음수 제거 및 정수 반올림)
         final_val = max(0.0, float(final_val))
