@@ -29,124 +29,48 @@ def safe_corr(x, y):
         return 0.0
     return float(np.corrcoef(x, y)[0, 1])
 
-def find_comovement_pairs(
-    pivot_value,
-    pivot_weight,
-    pivot_value_smooth,
-    pivot_weight_smooth,
-    max_lag=14,
-    min_nonzero=12,
-    value_threshold=0.37,   # 1차 value 필터
-    final_threshold=0.4    # 최종 필터
-):
+def find_comovement_pairs(pivot, max_lag=10, min_nonzero=12, corr_threshold=0.36):
+    items = pivot.index.to_list()
+    months = pivot.columns.to_list()
+    n_months = len(months)
 
-    items = pivot_value.index.to_list()
-    n_months = pivot_value.shape[1]
     results = []
 
-    for leader in tqdm(items, desc="Finding Pairs(v3)"):
-
-        # ----- leader series -----
-        x_v = pivot_value.loc[leader].values.astype(float)
-        x_w = pivot_weight.loc[leader].values.astype(float)
-        x_sv = pivot_value_smooth.loc[leader].values.astype(float)
-        x_sw = pivot_weight_smooth.loc[leader].values.astype(float)
-
-        # unit price (안전 처리)
-        x_up = np.divide(x_v, x_w, out=np.zeros_like(x_v), where=(x_w != 0))
-
-        # log-diff (diff 길이 앞에서 처리)
-        x_dv = np.diff(np.log1p(x_v))
-        x_dw = np.diff(np.log1p(x_w))
-
-        if np.count_nonzero(x_v) < min_nonzero:
+    for i, leader in tqdm(enumerate(items)):
+        x = pivot.loc[leader].values.astype(float)
+        if np.count_nonzero(x) < min_nonzero:
             continue
 
         for follower in items:
-
             if follower == leader:
                 continue
 
-            # ----- follower series -----
-            y_v = pivot_value.loc[follower].values.astype(float)
-            y_w = pivot_weight.loc[follower].values.astype(float)
-            y_sv = pivot_value_smooth.loc[follower].values.astype(float)
-            y_sw = pivot_weight_smooth.loc[follower].values.astype(float)
-
-            y_up = np.divide(y_v, y_w, out=np.zeros_like(y_v), where=(y_w != 0))
-
-            y_dv = np.diff(np.log1p(y_v))
-            y_dw = np.diff(np.log1p(y_w))
-
-            if np.count_nonzero(y_v) < min_nonzero:
+            y = pivot.loc[follower].values.astype(float)
+            if np.count_nonzero(y) < min_nonzero:
                 continue
 
-            best_corr = 0.0
             best_lag = None
-            best_source = None
+            best_corr = 0.0
 
-            # ================================
-            #     LAG 탐색
-            # ================================
+            # lag = 1 ~ max_lag 탐색
             for lag in range(1, max_lag + 1):
-
-                if lag >= n_months:
+                if n_months <= lag:
                     continue
+                corr = safe_corr(x[:-lag], y[lag:])
+                if abs(corr) > abs(best_corr):
+                    best_corr = corr
+                    best_lag = lag
 
-                # ------------------------------
-                # 1단계: value correlation 먼저 확인
-                # ------------------------------
-                corr_value = safe_corr(x_v[:-lag], y_v[lag:])
-                if abs(corr_value) < value_threshold:
-                    continue    # 1차 필터에서 탈락
-
-                # ------------------------------
-                # 2단계: full corr 계산 (quality filtering)
-                # ------------------------------
-                corr_list = [
-                    ("vv", corr_value),
-                    ("ww", safe_corr(x_w[:-lag], y_w[lag:])),
-                    ("up", safe_corr(x_up[:-lag], y_up[lag:])),
-                    ("svv", safe_corr(x_sv[:-lag], y_sv[lag:])),
-                    ("sww", safe_corr(x_sw[:-lag], y_sw[lag:])),
-                ]
-
-                # log-diff는 길이가 n-1이므로 조정
-                if len(x_dv) > lag and len(y_dv) > lag:
-                    corr_list.append(("dv", safe_corr(x_dv[:-lag], y_dv[lag:])))
-                if len(x_dw) > lag and len(y_dw) > lag:
-                    corr_list.append(("dw", safe_corr(x_dw[:-lag], y_dw[lag:])))
-
-                # ------------------------------
-                # best correlation 선택
-                # ------------------------------
-                for source, corr in corr_list:
-                    if abs(corr) > abs(best_corr):
-                        best_corr = corr
-                        best_lag = lag
-                        best_source = source
-
-            # ================================
-            #     3단계 : final threshold 적용
-            # ================================
-            if best_lag is not None and abs(best_corr) >= final_threshold:
+            # 임계값 이상이면 공행성쌍으로 채택
+            if best_lag is not None and abs(best_corr) >= corr_threshold:
                 results.append({
                     "leading_item_id": leader,
                     "following_item_id": follower,
                     "best_lag": best_lag,
                     "max_corr": best_corr,
-                    "source": best_source,
                 })
 
-    # 정렬 후 중복 제거
-    pairs = (
-        pd.DataFrame(results)
-        .assign(abs_corr=lambda df: df["max_corr"].abs())
-        .sort_values("abs_corr", ascending=False)
-        .drop_duplicates(["leading_item_id", "following_item_id"])
-        .drop(columns=["abs_corr"])
-    )
-
+    pairs = pd.DataFrame(results)
     return pairs
 
 
