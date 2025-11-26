@@ -16,7 +16,7 @@ def data_load():
 def data_preparing(train):
     monthly = (
         train
-        .groupby(["item_id", "year", "month"], as_index=False)[["value"]]
+        .groupby(["item_id", "year", "month"], as_index=False)[["value","weight"]]
         .sum()
     )
     monthly["ym"] = pd.to_datetime(
@@ -29,9 +29,17 @@ def data_preparing(train):
         .fillna(0.0)
     )
 
-    pivot_smooth_value = pivot_value.T.rolling(window=3).mean().T.fillna(0)
+    pivot_weight = (
+        monthly
+        .pivot(index="item_id", columns="ym", values="value")
+        .fillna(0.0)
+    )
 
-    return monthly, pivot_value, pivot_smooth_value
+    pivot_smooth_value = pivot_value.T.rolling(window=3).mean().T.fillna(0)
+    pivot_smooth_weight = pivot_weight.T.rolling(window=3).mean().T.fillna(0)
+
+
+    return monthly, pivot_value,pivot_weight, pivot_smooth_value,pivot_smooth_weight
 
 def build_training_data(
         pivot_value,
