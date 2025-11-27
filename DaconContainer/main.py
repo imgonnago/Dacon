@@ -3,8 +3,8 @@ import pandas as pd
 
 from automl import automl
 from data import data_load, data_preparing, build_training_data
-from util import find_comovement_pairs, baseline, evaluate_train
-from model import get_xgb_model, get_cat_model
+from util import find_comovement_pairs, baseline
+from model import get_xgb_model, get_cat_model, get_extra_model
 from train import fit, predict_ensemble, predict
 
 def main():
@@ -20,10 +20,7 @@ def main():
     print("find comovement pairs")
     print("=" * 80)
     pairs = find_comovement_pairs(
-        pivot_df_value,
-        pivot_df_weight,
-        pivot_value_smooth,
-        pivot_weight_smooth
+        pivot_df_value
     )
     print(pairs)
     print("=" * 80)
@@ -45,11 +42,17 @@ def main():
     print("create models")
     print("=" * 80)
     model_xgb = get_xgb_model()
+    model_extra = get_extra_model()
     model_cat = get_cat_model()
     print("=" * 80)
     print("Fitting XGBoost...")
     print("=" * 80)
     model_xgb = fit(df_train, model_xgb)
+    print("=" * 80)
+    print("Fitting extra tree...")
+    print("=" * 80)
+    model_extra = fit(df_train, model_extra)
+    print("=" * 80)
     print("Fitting CatBoost...")
     print("=" * 80)
     model_cat = fit(df_train, model_cat)
@@ -71,9 +74,11 @@ def main():
         pivot_df_value,
         pairs,
         model_xgb,
+        model_extra,
         model_cat,
-        w_xgb=0.4,  # XGBoost 가중치
-        w_cat=0.6   # CatBoost 가중치
+        w_xgb=0.3,  # XGBoost 가중치
+        w_extra=0.2, #ExtraTree 가중치
+        w_cat=0.5   # CatBoost 가중치
     )
 
     print("=" * 80)

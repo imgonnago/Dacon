@@ -75,6 +75,8 @@ def build_training_data(
             b_t_1 = b_series[t - 1]
             a_t_lag = a_series[t - lag]
             b_t_plus_1 = b_series[t + 1]
+            idx = t + 1 - lag
+            if idx < 0: continue
 
 
             rows.append({

@@ -8,26 +8,28 @@ import lightgbm as lgbm
 
 
 # 회귀모델 학습
-def model(df_train):
-    X = df_train[["b_t", "b_t_1", "a_t_lag", "max_corr", "best_lag"]]
 
-    y = df_train["target"]
-
-    """extra_model = ExtraTreesRegressor(
+def get_extra_model():
+    get_extra_model = ExtraTreesRegressor(
         n_jobs=-1,
-        n_estimators=47,
+        n_estimators=3000,
         max_features=1.0,
-        max_leaf_nodes = 26582,
-        random_state = 42
-    )"""
+        max_leaf_nodes=100,
+        random_state=42,
+        max_depth=None,
+        min_samples_split=2,
+        bootstrap=False,
+        verbose=0
+    )
+    return get_extra_model
 
 # 회귀모델 학습
 def get_xgb_model():
     xgb_model = xgb.XGBRegressor(
         objective='reg:absoluteerror',
         tree_method="hist",
-        n_estimators=300,
-        learning_rate=0.09999,
+        n_estimators=500,
+        learning_rate=0.13,
         subsample=0.8,
         colsample_bytree=0.8,
         gamma=0.2,
@@ -44,7 +46,7 @@ def get_cat_model():
     cat_model = CatBoostRegressor(
         iterations=3000,
         learning_rate=0.15,
-        depth=10,
+        depth=15,
         loss_function='MAE',
         random_state=42,
         verbose=100,

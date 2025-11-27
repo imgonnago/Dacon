@@ -11,13 +11,13 @@ def baseline(submission):
     answer = input("mac/window(m/w)")
     if answer == "m":
         print("sumission.csv is saved to mac")
-        submission.to_csv('/Users/joyongjae/Dacon/baseline/baseline_submit.csv', index=False)
+        submission.to_csv('/Users/joyongjae/Dacon/baseline/baseline_submission.csv', index=False)
         print("complete")
         return answer
 
     elif answer == "w":
         print("submission.csv is saved to window")
-        submission.to_csv('C:/Users/zxfg0/Dacon/baseline/baseline_submit.csv', index=False)
+        submission.to_csv('C:/Users/zxfg0/Dacon/baseline/baseline_submission.csv', index=False)
         print("complete")
         return answer
     else:
@@ -29,7 +29,7 @@ def safe_corr(x, y):
         return 0.0
     return float(np.corrcoef(x, y)[0, 1])
 
-def find_comovement_pairs(pivot, max_lag=10, min_nonzero=12, corr_threshold=0.366):
+def find_comovement_pairs(pivot, max_lag=10, min_nonzero=12, corr_threshold=0.367):
     items = pivot.index.to_list()
     months = pivot.columns.to_list()
     n_months = len(months)
