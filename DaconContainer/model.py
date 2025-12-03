@@ -3,8 +3,6 @@ import xgboost as xgb
 from catboost import CatBoostRegressor
 from sklearn.ensemble import ExtraTreesRegressor
 
-# 회귀모델 학습
-
 def get_extra_model():
     get_extra_model = ExtraTreesRegressor(
         n_jobs=-1,
@@ -19,7 +17,6 @@ def get_extra_model():
     )
     return get_extra_model
 
-# 회귀모델 학습
 def get_xgb_model():
     xgb_model = xgb.XGBRegressor(
         objective='reg:absoluteerror',
@@ -37,7 +34,6 @@ def get_xgb_model():
     )
     return xgb_model
 
-# 2. CatBoost 모델
 def get_cat_model():
     cat_model = CatBoostRegressor(
         iterations=3000,
