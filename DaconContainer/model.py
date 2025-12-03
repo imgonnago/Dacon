@@ -1,11 +1,7 @@
 #model.py
 import xgboost as xgb
 from catboost import CatBoostRegressor
-from pandas.core.common import random_state
-from sklearn.ensemble import RandomForestRegressor, VotingRegressor, ExtraTreesRegressor
-import lightgbm as lgbm
-
-
+from sklearn.ensemble import ExtraTreesRegressor
 
 # 회귀모델 학습
 
@@ -14,7 +10,7 @@ def get_extra_model():
         n_jobs=-1,
         n_estimators=3000,
         max_features=1.0,
-        max_leaf_nodes=100,
+        max_leaf_nodes=50,
         random_state=42,
         max_depth=None,
         min_samples_split=2,
@@ -56,12 +52,4 @@ def get_cat_model():
         early_stopping_rounds=100
     )
     return cat_model
-
-"""def get_rf_model():
-    rf_model = RandomForestRegressor(
-        n_estimators=2047,
-        max_features=1.0,
-        max_leaf_nodes=4867
-    )
-    return rf_model"""
 

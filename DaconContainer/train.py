@@ -68,7 +68,10 @@ def predict(pivot, pairs, reg):
     return df_pred
 
 
-def predict_ensemble(pivot, pairs, model_xgb, model_extra, model_cat, w_xgb = 0.35, w_extra = 0.15, w_cat = 0.5):
+def predict_ensemble(pivot, pairs,
+                     model_xgb, model_extra, model_cat,
+                     w_xgb = 0.3, w_extra = 0.2, w_cat = 0.5):
+
     months = pivot.columns.to_list()
     n_months = len(months)
     t_last = n_months - 1
@@ -143,14 +146,3 @@ def predict_ensemble(pivot, pairs, model_xgb, model_extra, model_cat, w_xgb = 0.
 
     df_pred = pd.DataFrame(preds)
     return df_pred
-
-
-
-
-
-
-
-
-
-
-

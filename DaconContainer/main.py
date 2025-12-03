@@ -5,7 +5,7 @@ from automl import automl
 from data import data_load, data_preparing, build_training_data
 from util import find_comovement_pairs, baseline
 from model import get_xgb_model, get_cat_model, get_extra_model
-from train import fit, predict_ensemble, predict
+from train import fit, predict_ensemble
 
 def main():
     print("="*80)
@@ -14,7 +14,7 @@ def main():
     print("data loading complete!")
     print("=" * 80)
 
-    monthly, pivot_df_value,pivot_df_weight, pivot_value_smooth, pivot_weight_smooth = data_preparing(data)
+    monthly, pivot_df_value, pivot_value_smooth,pivot_smooth_weight = data_preparing(data)
     print(pivot_df_value)
     print("=" * 80)
     print("find comovement pairs")
@@ -33,11 +33,6 @@ def main():
         pairs
     )
     print(df_train)
-    #모델 두 개 생성
-    """print("=" * 80)
-    print("automl")
-    print("=" * 80)
-    model = automl(df_train)"""
     print("=" * 80)
     print("create models")
     print("=" * 80)
@@ -58,13 +53,6 @@ def main():
     model_cat = fit(df_train, model_cat)
     print("model fit complete!")
     print("=" * 80)
-
-    """print("=" * 80)
-    submission = predict(
-        pivot_df_value,
-        pairs,
-        model
-    )"""
 
     #앙상블 예측
     print("=" * 80)
