@@ -1,0 +1,51 @@
+#model.py
+import xgboost as xgb
+from catboost import CatBoostRegressor
+from sklearn.ensemble import ExtraTreesRegressor
+
+def get_extra_model():
+    get_extra_model = ExtraTreesRegressor(
+        n_jobs=-1,
+        n_estimators=3000,
+        max_features=1.0,
+        max_leaf_nodes=50,
+        random_state=42,
+        max_depth=None,
+        min_samples_split=2,
+        bootstrap=False,
+        verbose=0
+    )
+    return get_extra_model
+
+def get_xgb_model():
+    xgb_model = xgb.XGBRegressor(
+        objective='reg:absoluteerror',
+        tree_method="hist",
+        n_estimators=300,
+        learning_rate=0.13,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        gamma=0.2,
+        max_depth=8,
+        min_child_weight=9,
+        random_state=42,
+        n_jobs=-1,
+        eval_metric='mae'
+    )
+    return xgb_model
+
+def get_cat_model():
+    cat_model = CatBoostRegressor(
+        iterations=3000,
+        learning_rate=0.15,
+        depth=15,
+        loss_function='MAE',
+        random_state=42,
+        verbose=100,
+        allow_writing_files=False,
+        l2_leaf_reg=3,
+        bagging_temperature=1,
+        early_stopping_rounds=100
+    )
+    return cat_model
+
