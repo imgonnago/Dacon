@@ -33,7 +33,6 @@ def main():
         pairs
     )
     print(df_train)
-
     print("=" * 80)
     print("create models")
     print("=" * 80)

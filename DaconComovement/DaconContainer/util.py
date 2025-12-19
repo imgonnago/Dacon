@@ -29,11 +29,8 @@ def safe_corr(x, y):
         return 0.0
     return float(np.corrcoef(x, y)[0, 1])
 
-<<<<<<< HEAD:DaconContainer/util.py
-def find_comovement_pairs(pivot, max_lag=8, min_nonzero=12, corr_threshold=0.366):
-=======
 def find_comovement_pairs(pivot, max_lag=8, min_nonzero=10, corr_threshold=0.365):
->>>>>>> 89b44ba (new):DaconComovement/DaconContainer/util.py
+
     items = pivot.index.to_list()
     months = pivot.columns.to_list()
     n_months = len(months)
